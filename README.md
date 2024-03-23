@@ -166,6 +166,15 @@ This will create **libORB_SLAM2.so**  at *lib* folder and the executables **mono
   ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/RGB-D/TUMX.yaml PATH_TO_SEQUENCE_FOLDER ASSOCIATIONS_FILE
   ```
 
+4. Running My file.
+
+```
+
+./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/RGB-D/TUM1.yaml dataset/rgbd_dataset_freiburg1_xyz/ Examples/RGB-D/associations/fr1_xyz.txt
+
+```
+
+
 # 7. ROS Examples
 
 ### Building the nodes for mono, monoAR, stereo and RGB-D
