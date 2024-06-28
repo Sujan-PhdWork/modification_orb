@@ -231,6 +231,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 
     temp_track();
     Track();
+    
 
     return mCurrentFrame.mTcw.clone();
 }
@@ -272,17 +273,29 @@ void Tracking::temp_track()
     {
         cout<<"current frame "<<mCurrentFrame.mnId<<endl;
 
+        cout<<" Second last frame " << mSeLastFrame.mnId<<endl;
         cout<<" last frame " << mLastFrame.mnId<<endl;
-        vector<cv::Point2f> p0, p1;
-        cv::goodFeaturesToTrack(mLastFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+
+        
+        
         vector<uchar> status;
         vector<float> err;
         cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
 
-        cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
 
-        cv::Mat F=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
-        cout<<"Fumdamental Matrix: "<<F<<endl;
+        vector<cv::Point2f> p0, p1, p2;
+        cv::goodFeaturesToTrack(mCurrentFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+        cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
+
+        cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
+        cout<<"Fumdamental Matrix frame 2 to frame 1: "<<F21<<endl;
+
+        cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mSeLastFrame.mGray, p0, p2, status, err, cv::Size(15,15), 2, criteria);
+
+        cv::Mat F31=cv::findFundamentalMat(p0,p2,cv::FM_RANSAC,3,0.99);
+        cout<<"Fumdamental Matrix frame 3 to frame 1 "<<F31<<endl;
+
+
 
     }
 }
@@ -506,7 +519,21 @@ void Tracking::Track()
         if(!mCurrentFrame.mpReferenceKF)
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
-        mLastFrame = Frame(mCurrentFrame);
+        
+
+        if (mCurrentFrame.mnId <2)
+        {
+            mSeLastFrame=Frame(mCurrentFrame);
+            mLastFrame = Frame(mCurrentFrame);
+        }
+
+        else
+        {
+            mSeLastFrame=Frame(mLastFrame);
+            mLastFrame = Frame(mCurrentFrame);
+        }
+
+
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
@@ -566,6 +593,7 @@ void Tracking::StereoInitialization()
         mpLocalMapper->InsertKeyFrame(pKFini);
 
         mLastFrame = Frame(mCurrentFrame);
+        mSeLastFrame=Frame(mCurrentFrame);
         mnLastKeyFrameId=mCurrentFrame.mnId;
         mpLastKeyFrame = pKFini;
 
