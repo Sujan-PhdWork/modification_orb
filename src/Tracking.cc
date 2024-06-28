@@ -230,6 +230,8 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     temp_track();
+
+
     Track();
     
 
@@ -270,7 +272,14 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 void Tracking::temp_track()
 {
     if (mState==OK)
-    {
+    {   
+
+        bool bOK;
+
+        if (mCurrentFrame.mnId>2)
+        {
+            bOK=TrackGeometry();  
+        }
         cout<<"current frame "<<mCurrentFrame.mnId<<endl;
 
         cout<<" Second last frame " << mSeLastFrame.mnId<<endl;
@@ -288,12 +297,12 @@ void Tracking::temp_track()
         cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
 
         cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
-        cout<<"Fumdamental Matrix frame 2 to frame 1: "<<F21<<endl;
+        // cout<<"Fumdamental Matrix frame 2 to frame 1: "<<F21<<endl;
 
         cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mSeLastFrame.mGray, p0, p2, status, err, cv::Size(15,15), 2, criteria);
 
         cv::Mat F31=cv::findFundamentalMat(p0,p2,cv::FM_RANSAC,3,0.99);
-        cout<<"Fumdamental Matrix frame 3 to frame 1 "<<F31<<endl;
+        // cout<<"Fumdamental Matrix frame 3 to frame 1 "<<F31<<endl;
 
 
 
@@ -327,6 +336,12 @@ void Tracking::Track()
     }
     else
     {
+        
+        
+        
+        
+        
+        
         // System is initialized. Track Frame.
         bool bOK;
 
@@ -806,6 +821,22 @@ void Tracking::CheckReplacedInLastFrame()
 }
 
 
+bool Tracking::TrackGeometry()
+{   
+    cout<<1<<endl;
+    ORBmatcher matcher(0.9,true);
+    vector<int> vmatches21; 
+    int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches21);
+    cout<<"Matches: "<<nmatches<<endl;
+    
+    return false;
+}
+
+
+
+
+
+
 bool Tracking::TrackReferenceKeyFrame()
 {
     // Compute Bag of Words vector
@@ -818,6 +849,7 @@ bool Tracking::TrackReferenceKeyFrame()
 
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
 
+    
     if(nmatches<15)
         return false;
 

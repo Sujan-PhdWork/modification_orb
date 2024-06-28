@@ -132,6 +132,7 @@ protected:
     bool TrackReferenceKeyFrame();
     void UpdateLastFrame();
     bool TrackWithMotionModel();
+    bool TrackGeometry();
 
     bool Relocalization();
 

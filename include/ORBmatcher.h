@@ -51,6 +51,13 @@ public:
     // Used to track from previous frame (Tracking)
     int SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono);
 
+
+    // This is used to track point from previous two frames, as well as previous frame
+    int SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, Frame &SeLastFrame, std::vector<int> &vnMatches21);
+
+
+
+
     // Project MapPoints seen in KeyFrame into the Frame and search matches.
     // Used in relocalisation (Tracking)
     int SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const std::set<MapPoint*> &sAlreadyFound, const float th, const int ORBdist);
