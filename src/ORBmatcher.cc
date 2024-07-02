@@ -1325,20 +1325,58 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
     return nFound;
 }
 
-int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, Frame &SeLastFrame, vector<int> &vnMatches21)
+
+int ORBmatcher::bestIndices(vector<size_t> vIdxs, Frame F,cv::Mat D)
 {
-    //To DO find the correspondence between second Last frame and last frame
-    // as their position is relatively optimized we will do search by projection to find the best matches
+    
+       
+    int bestDist = INT_MAX;
+    int bestDist2 = INT_MAX;
+    int bestIdx2 = -1;
+
+    for(vector<size_t>::iterator vit=vIdxs.begin(), vend=vIdxs.end(); vit!=vend; vit++)
+    {
+        size_t i2 = *vit;
+           
+
+        // if(vpMapPointMatches2[i2])
+            // continue;
+
+        cv::Mat d2 = F.mDescriptors.row(i2);
+
+        int dist = DescriptorDistance(D,d2);
+
+
+        if(dist<bestDist)
+        {   
+            bestDist2=bestDist;
+            bestDist=dist;
+            bestIdx2=i2;
+        } else if(dist<bestDist2)
+        {
+            bestDist2=dist;
+        }
+    }
+    if(bestDist<=bestDist2*mfNNratio && bestDist<=TH_HIGH)
+    {   
+
+            // cout<<3<<endl;
+        return bestIdx2;
+
+    }
+    return -1;
+
+}
+
+int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame &SeLastFrame, vector<std::pair<int, int>> &vnMatches321)
+{
+    //Idea: you back projected the second last frame to Last frame and current Frame
+    //And return the index of last frame and current frame  
 
 
     int nmatches=0;
-    vector<MapPoint*>vpMapPointMatches2 = vector<MapPoint*>(LastFrame.mvpMapPoints.size(),static_cast<MapPoint*>(NULL));
-    vnMatches21 = vector<int>(LastFrame.mvKeysUn.size(),-1);
-
-    vector<int> rotHist[HISTO_LENGTH];
-    for(int i=0;i<HISTO_LENGTH;i++)
-        rotHist[i].reserve(500);
-    const float factor = 1.0f/HISTO_LENGTH;
+    // vector<MapPoint*>vpMapPointMatches2 = vector<MapPoint*>(LastFrame.mvpMapPoints.size(),static_cast<MapPoint*>(NULL));
+    vnMatches321.assign(SeLastFrame.mvKeysUn.size(), std::make_pair(-1, -1));
     
     const cv::Mat Rlw=LastFrame.mTcw.rowRange(0,3).colRange(0,3);
     const cv::Mat tlw=LastFrame.mTcw.rowRange(0,3).col(3);
@@ -1371,79 +1409,41 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
         vector<size_t> vIndices2 = LastFrame.GetFeaturesInArea(u2,v2, 200, level1, level1);
 
-        
+        //Add window search in Current Frame for the best VIndices
         if(vIndices2.empty())
             continue;
 
-        cv::Mat d1 = SeLastFrame.mDescriptors.row(i1);
-       
-        int bestDist = INT_MAX;
-        int bestDist2 = INT_MAX;
-        int bestIdx2 = -1;
+        cv::Mat d2 = SeLastFrame.mDescriptors.row(i1);
+        
+        int bestIdx2=bestIndices(vIndices2,LastFrame,d2);
+        
+        
+        if (bestIdx2==-1)
+            continue;
 
-        for(vector<size_t>::iterator vit=vIndices2.begin(), vend=vIndices2.end(); vit!=vend; vit++)
-        {
-            size_t i2 = *vit;
-           
+        cv::KeyPoint kp2=LastFrame.mvKeys[bestIdx2];
+        float u1=kp2.pt.x;
+        float v1=kp2.pt.y;
 
-            if(vpMapPointMatches2[i2])
-                continue;
+        vector<size_t> vIndices1 = CurrentFrame.GetFeaturesInArea(u1,v1, 200, level1, level1);
+        // for (const auto& p : vIndices1) {
+        // std::cout << "(" << p;
+        // }
+        // std::cout<<std::endl;
+        
+        // if(vIndices1.empty())
+        //     //add for previous frame
+        //     vnMatches321[i1]=make_pair(bestIdx2,-1);
+        //     continue;
 
-            cv::Mat d2 = LastFrame.mDescriptors.row(i2);
+        cv::Mat d1 = LastFrame.mDescriptors.row(bestIdx2);
+        int bestIdx1=bestIndices(vIndices1,CurrentFrame,d1);
+        
+        vnMatches321[i1]=make_pair(bestIdx2, bestIdx1);
+        nmatches++;
 
-            int dist = DescriptorDistance(d1,d2);
-
-
-            if(dist<bestDist)
-            {   
-                bestDist2=bestDist;
-                bestDist=dist;
-                bestIdx2=i2;
-            } else if(dist<bestDist2)
-            {
-                bestDist2=dist;
-            }
-        }
-        if(bestDist<=bestDist2*mfNNratio && bestDist<=TH_HIGH)
-        {   
-
-            // cout<<3<<endl;
-            vpMapPointMatches2[bestIdx2]=pMP1;
-            vnMatches21[bestIdx2]=i1;
-            nmatches++;
-
-            float rot = SeLastFrame.mvKeysUn[i1].angle-LastFrame.mvKeysUn[bestIdx2].angle;
-            if(rot<0.0)
-                rot+=360.0f;
-            int bin = round(rot*factor);
-            if(bin==HISTO_LENGTH)
-                bin=0;
-            rotHist[bin].push_back(bestIdx2);
-
-        }
+        
     }
-
-         if(mbCheckOrientation)
-        {
-            int ind1=-1;
-            int ind2=-1;
-            int ind3=-1;
-
-            ComputeThreeMaxima(rotHist,HISTO_LENGTH,ind1,ind2,ind3);
-
-            for(int i=0; i<HISTO_LENGTH; i++)
-            {
-                if(i!=ind1 && i!=ind2 && i!=ind3)
-                {
-                    for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
-                    {
-                        vpMapPointMatches2[rotHist[i][j]]=NULL;
-                        vnMatches21[rotHist[i][j]]=-1;
-                        nmatches--;
-                    }
-                }
-            }
-        }
     return nmatches;
     
 

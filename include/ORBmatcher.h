@@ -53,10 +53,10 @@ public:
 
 
     // This is used to track point from previous two frames, as well as previous frame
-    int SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, Frame &SeLastFrame, std::vector<int> &vnMatches21);
+    int SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame &SeLastFrame, std::vector<std::pair<int, int>> &vnMatches21);
 
 
-
+    int bestIndices(vector<size_t> vIdxs, Frame F,cv::Mat D);
 
     // Project MapPoints seen in KeyFrame into the Frame and search matches.
     // Used in relocalisation (Tracking)
