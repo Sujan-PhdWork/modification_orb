@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "mutex": "cpp",
+        "condition_variable": "cpp",
+        "iostream": "cpp"
     }
 }

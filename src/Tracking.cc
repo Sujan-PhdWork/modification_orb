@@ -276,7 +276,7 @@ void Tracking::temp_track()
 
         bool bOK;
 
-        if (mCurrentFrame.mnId>2)
+        if (mCurrentFrame.mnId>3)
         {
             bOK=TrackGeometry();  
         }
@@ -287,22 +287,22 @@ void Tracking::temp_track()
 
         
         
-        vector<uchar> status;
-        vector<float> err;
-        cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
+        // vector<uchar> status;
+        // vector<float> err;
+        // cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
 
 
-        vector<cv::Point2f> p0, p1, p2;
-        cv::goodFeaturesToTrack(mCurrentFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
-        cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
+        // vector<cv::Point2f> p0, p1, p2;
+        // cv::goodFeaturesToTrack(mCurrentFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+        // cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
 
-        cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
-        // cout<<"Fumdamental Matrix frame 2 to frame 1: "<<F21<<endl;
+        // cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
+        // // cout<<"Fumdamental Matrix frame 2 to frame 1: "<<F21<<endl;
 
-        cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mSeLastFrame.mGray, p0, p2, status, err, cv::Size(15,15), 2, criteria);
+        // cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mSeLastFrame.mGray, p0, p2, status, err, cv::Size(15,15), 2, criteria);
 
-        cv::Mat F31=cv::findFundamentalMat(p0,p2,cv::FM_RANSAC,3,0.99);
-        // cout<<"Fumdamental Matrix frame 3 to frame 1 "<<F31<<endl;
+        // cv::Mat F31=cv::findFundamentalMat(p0,p2,cv::FM_RANSAC,3,0.99);
+        // // cout<<"Fumdamental Matrix frame 3 to frame 1 "<<F31<<endl;
 
 
 
@@ -823,12 +823,104 @@ void Tracking::CheckReplacedInLastFrame()
 
 bool Tracking::TrackGeometry()
 {   
-    cout<<1<<endl;
     ORBmatcher matcher(0.9,true);
     vector<int> vmatches21; 
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches21);
-    cout<<"Matches: "<<nmatches<<endl;
     
+    vector<uchar> status;
+    vector<float> err;
+    cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
+
+
+    vector<cv::Point2f> p0, p1;
+    cv::goodFeaturesToTrack(mSeLastFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
+
+    // cv::Mat Mask;
+    cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
+    
+    // cout<<Mask<<endl;
+
+
+
+    // cv:: Mat kp1_h;
+    // cv:: Mat kp2_h;
+    // for(size_t i=0,iend=p0.size();i<iend;i++ )
+    // {
+    //     if (Mask.at<double>(0,i)==0){
+    //         continue;
+    //     }
+    //     kp1_h = (cv::Mat_<double>(3, 1) << p0[i].x, p0[i].y, 1.0);
+    //     kp2_h = (cv::Mat_<double>(3, 1) << p1[i].x, p1[i].y, 1.0);
+
+    //     cv::Mat epi_line= F21 * kp1_h;
+        
+    //     double A= epi_line.at<double>(0);
+    //     double B= epi_line.at<double>(1);
+
+    //     cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
+
+    //     cv::Mat result = kp2_h.t() * norm_line;
+    //     cout<<result<<endl;
+    // }
+
+
+    // cout<<F21*p0<endl;
+
+    cv:: Mat kp1_h;
+    cv:: Mat kp2_h;
+    for (size_t i=0, iend=mLastFrame.mvKeys.size();i<iend; i++)
+    {
+        if (mLastFrame.mvpMapPoints[i]){
+            
+            if (vmatches21[i]==-1)
+            {
+                continue;
+            }
+            
+            
+            size_t j=vmatches21[i];
+            cv::KeyPoint kp1=mLastFrame.mvKeys[i];
+            cv::KeyPoint kp2=mSeLastFrame.mvKeys[j];
+            
+            kp1_h = (cv::Mat_<double>(3, 1) << kp1.pt.x, kp1.pt.y, 1.0);
+            kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
+
+            cv::Mat epi_line= F21 * kp2_h;
+            double A= epi_line.at<double>(0);
+            double B= epi_line.at<double>(1);
+
+            cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
+
+            cv::Mat result = kp1_h.t() * norm_line;
+            double r=result.at<double>(0);
+            // if (r>2.0)
+            // {
+            //     MapPoint* pMP = mLastFrame.mvpMapPoints[i];
+            //     mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+            //     mLastFrame.mvbOutlier[i]=false;
+            //     pMP->mbTrackInView = false;
+            //     pMP->mnLastFrameSeen = mLastFrame.mnId;
+            // } 
+        
+        }
+    }
+
+
+    
+    
+    
+    
+    // cout<<"Matches: "<<nmatches<<endl;
+    
+   // Todo now check Last Frame points are following the epipolar constrain 
+   // if its fails to follow, then     
+
+
+
+
+
+
     return false;
 }
 

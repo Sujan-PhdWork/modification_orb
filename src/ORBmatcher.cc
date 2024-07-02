@@ -1327,7 +1327,6 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
 
 int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, Frame &SeLastFrame, vector<int> &vnMatches21)
 {
-    cout<<2<<endl;
     //To DO find the correspondence between second Last frame and last frame
     // as their position is relatively optimized we will do search by projection to find the best matches
 
