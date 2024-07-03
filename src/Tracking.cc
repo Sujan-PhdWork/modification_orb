@@ -826,30 +826,33 @@ bool Tracking::TrackGeometry()
     ORBmatcher matcher(0.9,true);
     vector<std::pair<int,int>> vmatches321; 
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches321);
-    
-
-
-
     cout<<"Matches: "<<nmatches<<endl;
+    
+    
     vector<uchar> status;
     vector<float> err;
     cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
 
 
-    vector<cv::Point2f> p0, p1;
-    cv::goodFeaturesToTrack(mSeLastFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
-    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
+    vector<cv::Point2f> p3, p1,p2;
+    cv::goodFeaturesToTrack(mSeLastFrame.mGray, p3, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+    
+    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mCurrentFrame.mGray, p3, p1, status, err, cv::Size(15,15), 2, criteria);
+    // cv::Mat Mask;
+    cv::Mat F31=cv::findFundamentalMat(p3,p1,cv::FM_RANSAC,3,0.99);
+    
+    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mLastFrame.mGray, p3, p2, status, err, cv::Size(15,15), 2, criteria);
+    // cv::Mat Mask;
+    cv::Mat F32=cv::findFundamentalMat(p3,p2,cv::FM_RANSAC,3,0.99);
+    
+
+
+    // vector<cv::Point2f> p2, p1;
+    cv::goodFeaturesToTrack(mLastFrame.mGray, p2, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+    cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p2, p1, status, err, cv::Size(15,15), 2, criteria);
 
     // cv::Mat Mask;
-    cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
-
-
-    vector<cv::Point2f> p2, p3;
-    cv::goodFeaturesToTrack(mSeLastFrame.mGray, p2, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
-    cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p2, p3, status, err, cv::Size(15,15), 2, criteria);
-
-    // cv::Mat Mask;
-    cv::Mat F32=cv::findFundamentalMat(p2,p3,cv::FM_RANSAC,3,0.99);
+    cv::Mat F21=cv::findFundamentalMat(p2,p1,cv::FM_RANSAC,3,0.99);
     
     
     for (size_t i=0, iend=mSeLastFrame.mvKeys.size();i<iend; i++)
@@ -860,16 +863,35 @@ bool Tracking::TrackGeometry()
       {
 
         pair<int,int> idxs=vmatches321[i];
-        cv::KeyPoint kp=mSeLastFrame.mvKeys[i];
+        cv::KeyPoint kp3=mSeLastFrame.mvKeys[i];
 
         if (idxs.first==-1)
             continue;
-        cv::KeyPoint kp1= mLastFrame.mvKeys[idxs.first];
+        cv::KeyPoint kp2= mLastFrame.mvKeys[idxs.first];
 
         if (idxs.second==-1)
         {
-            cout<<"Hello"<<endl;
-            // Do two frame geometric constrain
+            
+            cv::Mat kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
+            cv::Mat kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
+
+            cv::Mat epi_line= F32 * kp3_h;
+            double A= epi_line.at<double>(0);
+            double B= epi_line.at<double>(1);
+
+            cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
+
+            cv::Mat result = kp2_h.t() * norm_line;
+            double r=result.at<double>(0);
+            cout<<r<<endl;
+            if (r>2.0)
+            {
+                MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                mSeLastFrame.mvbOutlier[i]=false;
+                pMP->mbTrackInView = false;
+                pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+            } 
         }
 
         else
@@ -883,7 +905,7 @@ bool Tracking::TrackGeometry()
 
         
 
-    cout<<" "<< i <<" "<< idxs.first<<" "<<idxs.second<<endl;
+    // cout<<" "<< i <<" "<< idxs.first<<" "<<idxs.second<<endl;
       
     }
     cout<<endl;
