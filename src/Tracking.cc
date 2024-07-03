@@ -228,9 +228,14 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
     mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    
 
+    {
+    unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+    cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
-
+    cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
+    }
 
     Track();
     
@@ -271,6 +276,8 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 
 void Tracking::temp_track()
 {
+
+    
     if (mState==OK)
     {   
 
@@ -280,32 +287,11 @@ void Tracking::temp_track()
         {
             bOK=TrackGeometry();  
         }
-        if (bOK)
-            mpFrameDrawer->Update(this);
+        
         cout<<"current frame "<<mCurrentFrame.mnId<<endl;
 
         cout<<" Second last frame " << mSeLastFrame.mnId<<endl;
         cout<<" last frame " << mLastFrame.mnId<<endl;
-
-        
-        
-        // vector<uchar> status;
-        // vector<float> err;
-        // cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
-
-
-        // vector<cv::Point2f> p0, p1, p2;
-        // cv::goodFeaturesToTrack(mCurrentFrame.mGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
-        // cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mLastFrame.mGray, p0, p1, status, err, cv::Size(15,15), 2, criteria);
-
-        // cv::Mat F21=cv::findFundamentalMat(p0,p1,cv::FM_RANSAC,3,0.99);
-        // // cout<<"Fumdamental Matrix frame 2 to frame 1: "<<F21<<endl;
-
-        // cv::calcOpticalFlowPyrLK(mCurrentFrame.mGray, mSeLastFrame.mGray, p0, p2, status, err, cv::Size(15,15), 2, criteria);
-
-        // cv::Mat F31=cv::findFundamentalMat(p0,p2,cv::FM_RANSAC,3,0.99);
-        // // cout<<"Fumdamental Matrix frame 3 to frame 1 "<<F31<<endl;
-
 
 
     }
@@ -849,12 +835,12 @@ bool Tracking::TrackGeometry()
     
     
 
-    // vector<cv::Point2f> p2, p1;
-    cv::goodFeaturesToTrack(mLastFrame.mGray, p2, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
-    cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p2, p1, status3, err, cv::Size(15,15), 2, criteria);
+    vector<cv::Point2f> p4, p5;
+    cv::goodFeaturesToTrack(mLastFrame.mGray, p4, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+    cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p4, p5, status3, err, cv::Size(15,15), 2, criteria);
 
     // cv::Mat Mask;
-    cv::Mat F21=cv::findFundamentalMat(p2,p1,cv::FM_RANSAC,3,0.99);
+    cv::Mat F21=cv::findFundamentalMat(p4,p5,cv::FM_RANSAC,3,0.99);
     
 
     
@@ -894,13 +880,14 @@ bool Tracking::TrackGeometry()
 
                     cv::Mat result = kp2_h.t() * norm_line;
                     double r=result.at<double>(0);
-                    if (r>2.0)
+                    if (r>4)
                     {
                         MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
                         mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
                         mSeLastFrame.mvbOutlier[i]=false;
                         pMP->mbTrackInView = false;
                         pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                        pMP->SetBadFlag();
                     } 
                 }
 
@@ -927,13 +914,14 @@ bool Tracking::TrackGeometry()
 
                     double r=sqrt(A*A+B*B);
                     
-                    if (r>3.0)
+                    if (r>5)
                     {
                         MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
                         mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
                         mSeLastFrame.mvbOutlier[i]=false;
                         pMP->mbTrackInView = false;
                         pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                        pMP->SetBadFlag();
                     }          
 
                 }
@@ -941,12 +929,6 @@ bool Tracking::TrackGeometry()
 
             }
         }
-
-
-                
-
-        
-        
 
         return true;    
     }
