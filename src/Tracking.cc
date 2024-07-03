@@ -280,6 +280,8 @@ void Tracking::temp_track()
         {
             bOK=TrackGeometry();  
         }
+        if (bOK)
+            mpFrameDrawer->Update(this);
         cout<<"current frame "<<mCurrentFrame.mnId<<endl;
 
         cout<<" Second last frame " << mSeLastFrame.mnId<<endl;
@@ -829,7 +831,7 @@ bool Tracking::TrackGeometry()
     cout<<"Matches: "<<nmatches<<endl;
     
     
-    vector<uchar> status;
+    vector<uchar> status1,status2,status3;
     vector<float> err;
     cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
 
@@ -837,165 +839,130 @@ bool Tracking::TrackGeometry()
     vector<cv::Point2f> p3, p1,p2;
     cv::goodFeaturesToTrack(mSeLastFrame.mGray, p3, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
     
-    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mCurrentFrame.mGray, p3, p1, status, err, cv::Size(15,15), 2, criteria);
+    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mCurrentFrame.mGray, p3, p1, status1, err, cv::Size(15,15), 2, criteria);
     // cv::Mat Mask;
     cv::Mat F31=cv::findFundamentalMat(p3,p1,cv::FM_RANSAC,3,0.99);
     
-    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mLastFrame.mGray, p3, p2, status, err, cv::Size(15,15), 2, criteria);
+    cv::calcOpticalFlowPyrLK(mSeLastFrame.mGray, mLastFrame.mGray, p3, p2, status2, err, cv::Size(15,15), 2, criteria);
     // cv::Mat Mask;
     cv::Mat F32=cv::findFundamentalMat(p3,p2,cv::FM_RANSAC,3,0.99);
     
-
+    
 
     // vector<cv::Point2f> p2, p1;
     cv::goodFeaturesToTrack(mLastFrame.mGray, p2, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
-    cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p2, p1, status, err, cv::Size(15,15), 2, criteria);
+    cv::calcOpticalFlowPyrLK(mLastFrame.mGray, mCurrentFrame.mGray, p2, p1, status3, err, cv::Size(15,15), 2, criteria);
 
     // cv::Mat Mask;
     cv::Mat F21=cv::findFundamentalMat(p2,p1,cv::FM_RANSAC,3,0.99);
     
+
     
-    for (size_t i=0, iend=mSeLastFrame.mvKeys.size();i<iend; i++)
+    try
     {
-      pair<int,int> idxs=vmatches321[i];
-
-      if (mSeLastFrame.mvpMapPoints[i])
-      {
-
-        pair<int,int> idxs=vmatches321[i];
-        cv::KeyPoint kp3=mSeLastFrame.mvKeys[i];
-
-        if (idxs.first==-1)
-            continue;
-        cv::KeyPoint kp2= mLastFrame.mvKeys[idxs.first];
-
-        if (idxs.second==-1)
+        if (F31.empty()||F32.empty()||F21.empty())
         {
+            return false;
+        
+        }
+        for (size_t i=0, iend=mSeLastFrame.mvKeys.size();i<iend; i++)
+        {   
             
-            cv::Mat kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
-            cv::Mat kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
-
-            cv::Mat epi_line= F32 * kp3_h;
-            double A= epi_line.at<double>(0);
-            double B= epi_line.at<double>(1);
-
-            cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
-
-            cv::Mat result = kp2_h.t() * norm_line;
-            double r=result.at<double>(0);
-            cout<<r<<endl;
-            if (r>2.0)
+            pair<int,int> idxs=vmatches321[i];
+            // cout<<" "<< i <<" "<< idxs.first<<" "<<idxs.second<<endl;
+            if (mSeLastFrame.mvpMapPoints[i])
             {
-                MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-                mSeLastFrame.mvbOutlier[i]=false;
-                pMP->mbTrackInView = false;
-                pMP->mnLastFrameSeen = mSeLastFrame.mnId;
-            } 
+
+                pair<int,int> idxs=vmatches321[i];
+                cv::KeyPoint kp3=mSeLastFrame.mvKeys[i];
+
+                if (idxs.first==-1)
+                    continue;
+                cv::KeyPoint kp2= mLastFrame.mvKeys[idxs.first];
+
+                if (idxs.second==-1)
+                {
+                    
+                    cv::Mat kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
+                    cv::Mat kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
+
+                    cv::Mat epi_line= F32 * kp3_h;
+                    double A= epi_line.at<double>(0);
+                    double B= epi_line.at<double>(1);
+
+                    cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
+
+                    cv::Mat result = kp2_h.t() * norm_line;
+                    double r=result.at<double>(0);
+                    if (r>2.0)
+                    {
+                        MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                        mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                        mSeLastFrame.mvbOutlier[i]=false;
+                        pMP->mbTrackInView = false;
+                        pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                    } 
+                }
+
+                else
+                {   
+                    cv::KeyPoint kp1= mCurrentFrame.mvKeys[idxs.second];
+                    cv::Mat kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
+                    cv::Mat kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
+                    cv::Mat kp1_h = (cv::Mat_<double>(3, 1) << kp1.pt.x, kp1.pt.y, 1.0);
+
+
+                    cv::Mat epi_line31= F31 * kp3_h;
+                    cv::Mat epi_line21= F21 * kp2_h;
+
+                    cv::Mat cross_product=epi_line21.cross(epi_line31);
+                    cross_product=cross_product/cross_product.at<double>(2);
+                    
+                    double x=cross_product.at<double>(0);
+                    double y=cross_product.at<double>(1);
+                    
+
+                    double A=x-kp1.pt.x;
+                    double B=y-kp1.pt.y;
+
+                    double r=sqrt(A*A+B*B);
+                    
+                    if (r>3.0)
+                    {
+                        MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                        mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                        mSeLastFrame.mvbOutlier[i]=false;
+                        pMP->mbTrackInView = false;
+                        pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                    }          
+
+                }
+
+
+            }
         }
 
-        else
-        {   //Do three frame geometric contrain
-            cv::KeyPoint kp2= mCurrentFrame.mvKeys[idxs.second];
-        }
 
-
-      }
-
+                
 
         
+        
 
-    // cout<<" "<< i <<" "<< idxs.first<<" "<<idxs.second<<endl;
-      
+        return true;    
     }
-    cout<<endl;
-
-
-
-
-    // cout<<Mask<<endl;
-
-
-
-    // cv:: Mat kp1_h;
-    // cv:: Mat kp2_h;
-    // for(size_t i=0,iend=p0.size();i<iend;i++ )
-    // {
-    //     if (Mask.at<double>(0,i)==0){
-    //         continue;
-    //     }
-    //     kp1_h = (cv::Mat_<double>(3, 1) << p0[i].x, p0[i].y, 1.0);
-    //     kp2_h = (cv::Mat_<double>(3, 1) << p1[i].x, p1[i].y, 1.0);
-
-    //     cv::Mat epi_line= F21 * kp1_h;
-        
-    //     double A= epi_line.at<double>(0);
-    //     double B= epi_line.at<double>(1);
-
-    //     cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
-
-    //     cv::Mat result = kp2_h.t() * norm_line;
-    //     cout<<result<<endl;
-    // }
-
-
-    // cout<<F21*p0<endl;
-
-    // cv:: Mat kp1_h;
-    // cv:: Mat kp2_h;
-    // for (size_t i=0, iend=mLastFrame.mvKeys.size();i<iend; i++)
-    // {
-    //     if (mLastFrame.mvpMapPoints[i]){
-            
-    //         if (vmatches21[i]==-1)
-    //         {
-    //             continue;
-    //         }
-            
-            
-    //         size_t j=vmatches21[i];
-    //         cv::KeyPoint kp1=mLastFrame.mvKeys[i];
-    //         cv::KeyPoint kp2=mSeLastFrame.mvKeys[j];
-            
-    //         kp1_h = (cv::Mat_<double>(3, 1) << kp1.pt.x, kp1.pt.y, 1.0);
-    //         kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
-
-    //         cv::Mat epi_line= F21 * kp2_h;
-    //         double A= epi_line.at<double>(0);
-    //         double B= epi_line.at<double>(1);
-
-    //         cv::Mat norm_line=epi_line/sqrt(A*A+B*B);
-
-    //         cv::Mat result = kp1_h.t() * norm_line;
-    //         double r=result.at<double>(0);
-    //         // if (r>2.0)
-    //         // {
-    //         //     MapPoint* pMP = mLastFrame.mvpMapPoints[i];
-    //         //     mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-    //         //     mLastFrame.mvbOutlier[i]=false;
-    //         //     pMP->mbTrackInView = false;
-    //         //     pMP->mnLastFrameSeen = mLastFrame.mnId;
-    //         // } 
-        
-    //     }
-    // }
-
 
     
-    
-    
-    
-    // cout<<"Matches: "<<nmatches<<endl;
-    
-   // Todo now check Last Frame points are following the epipolar constrain 
-   // if its fails to follow, then     
-
-
-
-
-
-
+    catch(const cv::Exception& e)
+    {
+        std::cerr <<"Opencv error: "<< e.what() << endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"Standard error: "<< e.what() << endl;;
+    }
     return false;
+    
+    
 }
 
 

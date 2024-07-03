@@ -1360,7 +1360,7 @@ int ORBmatcher::bestIndices(vector<size_t> vIdxs, Frame F,cv::Mat D)
     if(bestDist<=bestDist2*mfNNratio && bestDist<=TH_HIGH)
     {   
 
-            // cout<<3<<endl;
+        // cout<<3<<endl;
         return bestIdx2;
 
     }
@@ -1435,10 +1435,14 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame 
         //     //add for previous frame
         //     vnMatches321[i1]=make_pair(bestIdx2,-1);
         //     continue;
-
+        if(vIndices1.empty())
+        {
+            vnMatches321[i1]=make_pair(bestIdx2, -1);
+            nmatches++;
+            continue;
+        }
         cv::Mat d1 = LastFrame.mDescriptors.row(bestIdx2);
         int bestIdx1=bestIndices(vIndices1,CurrentFrame,d1);
-        
         vnMatches321[i1]=make_pair(bestIdx2, bestIdx1);
         nmatches++;
 
