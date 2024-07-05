@@ -24,6 +24,11 @@
 
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
+#include <Python.h>
+#include <pybind11/embed.h>
+#include <pybind11/numpy.h>
+
+
 
 #include"Viewer.h"
 #include"FrameDrawer.h"
