@@ -230,6 +230,8 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     
 
+
+    
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
     cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;

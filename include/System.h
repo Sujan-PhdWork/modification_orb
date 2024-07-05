@@ -26,7 +26,11 @@
 #include<string>
 #include<thread>
 #include<opencv2/core/core.hpp>
+#include <Python.h>
+#include <pybind11/embed.h>
+#include <pybind11/numpy.h>
 
+#include "Segmentation.h"
 #include "Tracking.h"
 #include "FrameDrawer.h"
 #include "MapDrawer.h"

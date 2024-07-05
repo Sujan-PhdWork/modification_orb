@@ -83,6 +83,9 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
+    
+    
+    
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
                              mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
 
@@ -205,7 +208,8 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
         mbReset = false;
     }
     }
-
+    pybind11::object plot = display();
+    plot(10);
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,timestamp);
 
     unique_lock<mutex> lock2(mMutexState);
