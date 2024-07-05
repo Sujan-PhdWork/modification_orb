@@ -1,15 +1,40 @@
 # include "Segmentation.h"
 
+namespace py = pybind11;
 
-pybind11::object display() {
-    static pybind11::scoped_interpreter guard{}; // Ensure the interpreter is only initialized once
 
-    auto sys = pybind11::module::import("sys");
-
+Segmentation::Segmentation()
+{   
+    static py::scoped_interpreter guard{};
+    py::object sys=py::module::import("sys");
     sys.attr("path").attr("append")("python/");
-    
-    auto display_image = pybind11::module::import("display");
-    auto show = display_image.attr("plot");
-
-    return show;
+    auto segment_module = py::module::import("display");
+    segment=segment_module.attr("plot");
 }
+
+
+
+
+cv::Mat Segmentation::result(cv::Mat Img)
+{
+    cv::Mat contiguous_Img = Img.isContinuous() ? Img : Img.clone();
+    // Create a numpy array from the OpenCV matrix
+    py::array_t<uint8_t> Image_array(
+        {Img.rows, Img.cols, Img.channels()}, // shape of the array
+        contiguous_Img.data);                // pointer to the data
+
+    
+
+    py::array_t<uint8_t> segmented_array=segment(Image_array);
+    // Create a OpenCV Matrix from the numpy array
+    py::buffer_info buf = segmented_array.request();
+    cv::Mat segmented_image(buf.shape[0], buf.shape[1], CV_8UC1, (unsigned char*)buf.ptr);
+    
+    return segmented_image;
+}
+
+
+
+
+
+
