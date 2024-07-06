@@ -5,6 +5,7 @@
         "condition_variable": "cpp",
         "iostream": "cpp",
         "*.tcc": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "iomanip": "cpp"
     }
 }

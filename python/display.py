@@ -8,7 +8,9 @@ model.to("cuda")
 
 
 def plot(x):
+    print("right this time")
     x=x.astype(np.uint8)
     results = model(x,verbose=False)
     edges = cv2.Canny(x,100,200)
     return edges
+

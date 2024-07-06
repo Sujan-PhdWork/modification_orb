@@ -1,3 +1,4 @@
+
 echo "Configuring and building Thirdparty/DBoW2 ..."
 
 cd Thirdparty/DBoW2
@@ -15,15 +16,6 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
 
-
-cd ../../pybind11
-
-echo "Configuring and building Thirdparty/pybind11 ..."
-
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j
 
 cd ../../../
 
