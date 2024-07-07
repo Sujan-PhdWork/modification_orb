@@ -1047,10 +1047,15 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
         return;
 
     Mat image = _image.getMat();
+    Mat mask=_mask.getMat();
     assert(image.type() == CV_8UC1 );
+    cv::Mat result;
+    bitwise_not(mask,mask);
+    
+    bitwise_and(image,image,result,mask);
 
     // Pre-compute the scale pyramid
-    ComputePyramid(image);
+    ComputePyramid(result);
 
     vector < vector<KeyPoint> > allKeypoints;
     ComputeKeyPointsOctTree(allKeypoints);

@@ -31,8 +31,11 @@ def segment(frame):
             continue
 
         lable_image=cv2.bitwise_or(lable_image,total_mask[i])
+    kernel = np.ones((9, 9), np.uint8) 
+    lable_image=lable_image*255
+    img_dilation = cv2.dilate(lable_image, kernel, iterations=1) 
 
-    return lable_image*255
+    return img_dilation
 
 
 

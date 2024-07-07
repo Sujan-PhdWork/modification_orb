@@ -196,7 +196,7 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
         }
     }
 
-    mCurrentFrame = Frame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    mCurrentFrame = Frame(mImGray,imGrayRight,cv::Mat(),timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
 
@@ -208,12 +208,6 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
 {
     mImGray = imRGB;
     mSegImg=segImg; 
-    // mSegImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
-    // segImg.copyTo(mSegImg);
-
-
-
-    
     
     cv::Mat imDepth = imD;
 
@@ -235,17 +229,17 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || imDepth.type()!=CV_32F)
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
-    mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     
 
 
     
-    {
-    unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
-    cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
-    temp_track();
-    cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
-    }
+    // {
+    // unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+    // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
+    // temp_track();
+    // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
+    // }
 
     Track();
     
@@ -274,9 +268,9 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
     }
 
     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
-        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+        mCurrentFrame = Frame(mImGray,cv::Mat(),timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     else
-        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+        mCurrentFrame = Frame(mImGray,cv::Mat(),timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     
     Track();
