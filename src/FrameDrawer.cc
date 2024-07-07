@@ -33,9 +33,10 @@ FrameDrawer::FrameDrawer(Map* pMap):mpMap(pMap)
 {
     mState=Tracking::SYSTEM_NOT_READY;
     mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
+    mSeg = cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
 }
 
-cv::Mat FrameDrawer::DrawFrame()
+cv::Mat FrameDrawer::DrawFrame(cv::Mat &segImg)
 {
     cv::Mat im;
     vector<cv::KeyPoint> vIniKeys; // Initialization: KeyPoints in reference frame
@@ -52,6 +53,8 @@ cv::Mat FrameDrawer::DrawFrame()
             mState=Tracking::NO_IMAGES_YET;
 
         mIm.copyTo(im);
+        mSeg.copyTo(segImg);
+        
 
         if(mState==Tracking::NOT_INITIALIZED)
         {
@@ -168,6 +171,11 @@ void FrameDrawer::Update(Tracking *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
+    pTracker->mSegImg.copyTo(mSeg);
+    
+    
+
+    
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
     N = mvCurrentKeys.size();
     mvbVO = vector<bool>(N,false);

@@ -134,8 +134,14 @@ void Viewer::Run()
 
         pangolin::FinishFrame();
 
-        cv::Mat im = mpFrameDrawer->DrawFrame();
+        cv::Mat segImg;
+        cv::Mat im = mpFrameDrawer->DrawFrame(segImg);
         cv::imshow("ORB-SLAM2: Current Frame",im);
+
+        cv::imshow("ORB-SLAM2: Segmented Binary Image",segImg);
+
+
+
         cv::waitKey(mT);
 
         if(menuReset)

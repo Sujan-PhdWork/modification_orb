@@ -1,4 +1,5 @@
 # include "Segmentation.h"
+#include <iostream>
 
 namespace py = pybind11;
 
@@ -8,8 +9,8 @@ Segmentation::Segmentation()
     static py::scoped_interpreter guard{};
     py::object sys=py::module::import("sys");
     sys.attr("path").attr("append")("python/");
-    auto segment_module = py::module::import("display");
-    segment=segment_module.attr("plot");
+    auto segment_module = py::module::import("segmentation");
+    segment=segment_module.attr("segment");
 }
 
 
@@ -29,7 +30,7 @@ cv::Mat Segmentation::result(cv::Mat Img)
     // Create a OpenCV Matrix from the numpy array
     py::buffer_info buf = segmented_array.request();
     cv::Mat segmented_image(buf.shape[0], buf.shape[1], CV_8UC1, (unsigned char*)buf.ptr);
-    
+    // std::cout<<segmented_image<<std::endl;
     return segmented_image;
 }
 
