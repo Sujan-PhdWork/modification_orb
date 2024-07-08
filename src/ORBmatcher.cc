@@ -1407,7 +1407,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame 
         float u2 = LastFrame.fx*xc2*invzc2+LastFrame.cx;
         float v2 = LastFrame.fy*yc2*invzc2+LastFrame.cy;
 
-        vector<size_t> vIndices2 = LastFrame.GetFeaturesInArea(u2,v2, 200, level1, level1);
+        vector<size_t> vIndices2 = LastFrame.GetFeaturesInArea(u2,v2, 10, level1, level1);
 
         //Add window search in Current Frame for the best VIndices
         if(vIndices2.empty())
@@ -1425,7 +1425,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame 
         float u1=kp2.pt.x;
         float v1=kp2.pt.y;
 
-        vector<size_t> vIndices1 = CurrentFrame.GetFeaturesInArea(u1,v1, 200, level1, level1);
+        vector<size_t> vIndices1 = CurrentFrame.GetFeaturesInArea(u1,v1, 15, level1, level1);
         // for (const auto& p : vIndices1) {
         // std::cout << "(" << p;
         // }
