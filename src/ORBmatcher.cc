@@ -1425,7 +1425,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame 
         float u1=kp2.pt.x;
         float v1=kp2.pt.y;
 
-        vector<size_t> vIndices1 = CurrentFrame.GetFeaturesInArea(u1,v1, 15, level1, level1);
+        vector<size_t> vIndices1 = CurrentFrame.GetFeaturesInArea(u1,v1, 7, level1, level1);
         // for (const auto& p : vIndices1) {
         // std::cout << "(" << p;
         // }
