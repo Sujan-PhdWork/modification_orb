@@ -121,7 +121,6 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mGray(imGray.clone())
 {   
     cv::Mat mask;
-    cv::bitwise_not(SegImg,mask);
     cv::bitwise_and(imGray,imGray,mSegGray,mask);
     
 
@@ -138,10 +137,18 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
 
     // ORB extraction
     ExtractORB(0,imGray,SegImg);
-
     
+    cv::Mat vizimg= cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
+    imGray.copyTo(vizimg);
 
-
+    for(uint i = 0; i < mvKeys.size(); i++)
+    {
+        cv::circle(vizimg,mvKeys[i].pt,3,cv::Scalar(0,255,0),-1);
+    }
+    cv::imshow("Hello",vizimg);
+    cv::imshow("Hello2", SegImg);
+    // cv::imshow("Hello2",vizimg2);
+    cv::waitKey(1);
 
     N = mvKeys.size();
 
@@ -252,12 +259,72 @@ void Frame::AssignFeaturesToGrid()
 }
 
 void Frame::ExtractORB(int flag, const cv::Mat &im, const cv::Mat &mask)
-{
+{   
+
+    
     if(flag==0)
-        (*mpORBextractorLeft)(im,mask,mvKeys,mDescriptors);
+    {   
+        vector<cv::KeyPoint> mvKeys_temp;
+        cv::Mat mDescriptors_temp;
+        (*mpORBextractorLeft)(im,mask,mvKeys_temp,mDescriptors_temp);
+        checkNeighbour(mvKeys_temp,mDescriptors_temp,mvKeys,mDescriptors,mask);
+    }
+
+    //Check its neighbour is inside the mask
+
+
     else
         (*mpORBextractorRight)(im,mask,mvKeysRight,mDescriptorsRight);
 }
+
+
+void Frame::checkNeighbour(std::vector<cv::KeyPoint> Keys_temp, cv::Mat Des_temp, std::vector<cv::KeyPoint> &Keys,cv::Mat& Des,cv::Mat mask)
+{
+    std::vector<cv::Point2f> offsets = {
+        cv::Point2f(15, 0),
+        cv::Point2f(-15, 0),
+        cv::Point2f(0, 15),
+        cv::Point2f(0, -15),
+        cv::Point2f(15, 15),
+        cv::Point2f(15, -15),
+        cv::Point2f(-15, 15),
+        cv::Point2f(-15, -15)
+    };
+    // cout<<mask.type()<<endl;
+    for (uint i=0; i<Keys_temp.size(); i++)
+    {   
+
+        cv::KeyPoint kp=Keys_temp[i];
+        bool isValid=true;
+
+        for (const auto& offset : offsets) {
+            cv::Point2f neighbor = kp.pt + offset;
+            // Check if the neighbor is within image bounds
+            if (neighbor.x >= 0 && neighbor.x < mask.cols &&
+                neighbor.y >= 0 && neighbor.y < mask.rows) 
+                {   
+                    // Check if the neighbor is a black pixel in the binary image
+                    if (mask.at<uint16_t>(neighbor) == 0) 
+                    {
+                        isValid = false;
+                        break;
+                    }
+                }
+        }
+
+        if (isValid)
+        {
+            Keys.push_back(kp);
+            cv::Mat d = Des_temp.row(i);
+            Des.push_back(d);
+        }
+    }
+
+     
+}
+
+
+
 
 void Frame::SetPose(cv::Mat Tcw)
 {

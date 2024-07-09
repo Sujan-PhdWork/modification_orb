@@ -98,6 +98,10 @@ public:
     // Backprojects a keypoint (if stereo/depth info available) into 3D world coordinates.
     cv::Mat UnprojectStereo(const int &i);
 
+    //check neighbours for Segmentaion
+    void checkNeighbour(std::vector<cv::KeyPoint> Keys_temp, cv::Mat Des_temp,std::vector<cv::KeyPoint> &Keys,cv::Mat& Des,cv::Mat mask);
+
+
 public:
     // Vocabulary used for relocalization.
     ORBVocabulary* mpORBvocabulary;
@@ -203,6 +207,8 @@ private:
 
     // Assign keypoints to the grid for speed up feature matching (called in the constructor).
     void AssignFeaturesToGrid();
+
+
 
     // Rotation, translation and camera center
     cv::Mat mRcw;

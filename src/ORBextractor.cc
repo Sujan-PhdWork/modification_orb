@@ -1050,8 +1050,6 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     Mat mask=_mask.getMat();
     assert(image.type() == CV_8UC1 );
     cv::Mat result;
-    bitwise_not(mask,mask);
-    
     bitwise_and(image,image,result,mask);
 
     // Pre-compute the scale pyramid
