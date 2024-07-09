@@ -9,13 +9,16 @@ model.to("cuda")
 
 def segment(frame):
    
-
+    if frame is None:
+        exit()
     original_W=frame.shape[1]
     original_H=frame.shape[0]
     frame=frame.astype(np.uint8)
     results = model(frame,verbose=False)
     
     result=results[0].to("cpu")
+    if result.masks is None:
+        return np.ones((original_H,original_W),dtype=np.uint8)
 
     total_mask=result.masks.data.numpy().astype(np.uint8)
 
@@ -31,7 +34,7 @@ def segment(frame):
             continue
 
         lable_image=cv2.bitwise_or(lable_image,total_mask[i])
-    kernel = np.ones((9, 9), np.uint8) 
+    kernel = np.ones((13,13), np.uint8) 
     lable_image=lable_image*255
     img_dialation = cv2.dilate(lable_image, kernel, iterations=1) 
     img_dialation = cv2.bitwise_not(img_dialation)

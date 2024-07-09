@@ -138,17 +138,17 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
     // ORB extraction
     ExtractORB(0,imGray,SegImg);
     
-    cv::Mat vizimg= cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
-    imGray.copyTo(vizimg);
+    // cv::Mat vizimg= cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
+    // imGray.copyTo(vizimg);
 
-    for(uint i = 0; i < mvKeys.size(); i++)
-    {
-        cv::circle(vizimg,mvKeys[i].pt,3,cv::Scalar(0,255,0),-1);
-    }
-    cv::imshow("Hello",vizimg);
-    cv::imshow("Hello2", SegImg);
-    // cv::imshow("Hello2",vizimg2);
-    cv::waitKey(1);
+    // for(uint i = 0; i < mvKeys.size(); i++)
+    // {
+    //     cv::circle(vizimg,mvKeys[i].pt,3,cv::Scalar(0,255,0),-1);
+    // }
+    // cv::imshow("Hello",vizimg);
+    // cv::imshow("Hello2", SegImg);
+    // // cv::imshow("Hello2",vizimg2);
+    // cv::waitKey(1);
 
     N = mvKeys.size();
 
@@ -281,35 +281,33 @@ void Frame::ExtractORB(int flag, const cv::Mat &im, const cv::Mat &mask)
 void Frame::checkNeighbour(std::vector<cv::KeyPoint> Keys_temp, cv::Mat Des_temp, std::vector<cv::KeyPoint> &Keys,cv::Mat& Des,cv::Mat mask)
 {
     std::vector<cv::Point2f> offsets = {
-        cv::Point2f(15, 0),
-        cv::Point2f(-15, 0),
-        cv::Point2f(0, 15),
-        cv::Point2f(0, -15),
-        cv::Point2f(15, 15),
-        cv::Point2f(15, -15),
-        cv::Point2f(-15, 15),
-        cv::Point2f(-15, -15)
+        cv::Point2f(10, 0),
+        cv::Point2f(-10, 0),
+        cv::Point2f(0, 10),
+        cv::Point2f(0, -10),
+        cv::Point2f(10, 10),
+        cv::Point2f(10, -10),
+        cv::Point2f(-10, 10),
+        cv::Point2f(-10, -10)
     };
     // cout<<mask.type()<<endl;
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    const double proximityThreshold = 10.0; // Adjust as needed
+    
     for (uint i=0; i<Keys_temp.size(); i++)
     {   
 
         cv::KeyPoint kp=Keys_temp[i];
-        bool isValid=true;
+        bool isValid=false;
 
-        for (const auto& offset : offsets) {
-            cv::Point2f neighbor = kp.pt + offset;
-            // Check if the neighbor is within image bounds
-            if (neighbor.x >= 0 && neighbor.x < mask.cols &&
-                neighbor.y >= 0 && neighbor.y < mask.rows) 
-                {   
-                    // Check if the neighbor is a black pixel in the binary image
-                    if (mask.at<uint16_t>(neighbor) == 0) 
-                    {
-                        isValid = false;
-                        break;
-                    }
-                }
+
+        for (const auto& contour : contours) {
+            double distance = cv::pointPolygonTest(contour, kp.pt, true);
+            if (distance >= 0 && distance >= proximityThreshold) {
+                isValid = true;
+                break;
+            }
         }
 
         if (isValid)

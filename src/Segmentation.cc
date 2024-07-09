@@ -34,6 +34,11 @@ cv::Mat Segmentation::result(cv::Mat Img)
     return segmented_image;
 }
 
+// void Segmentation::exit()
+// {   
+//    static py::scoped_interpreter guard{}; 
+//    py::exec("exit()");
+// }
 
 
 

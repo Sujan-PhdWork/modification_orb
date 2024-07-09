@@ -22,6 +22,7 @@
 #ifndef TRACKING_H
 #define TRACKING_H
 
+#include <cstdint>
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
 #include"Viewer.h"
@@ -145,6 +146,8 @@ protected:
 
     bool NeedNewKeyFrame();
     void CreateNewKeyFrame();
+    cv::Mat computeFundamentalMat(Frame F2, Frame F1 );
+
 
     // In case of performing only localization, this flag is true when there are no matches to
     // points in the map. Still tracking will continue if there are enough matches with temporal points.

@@ -232,12 +232,12 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     // mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     mCurrentFrame = Frame(mImGray,imDepth,segImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
-    // {
-    // unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
-    // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
-    // temp_track();
-    // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
-    // }
+    {
+    unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+    cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
+    temp_track();
+    cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
+    }
     
     
 
@@ -821,6 +821,70 @@ void Tracking::CheckReplacedInLastFrame()
 }
 
 
+
+cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
+{
+    vector<uchar> status;
+    vector<float> err;
+    cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
+
+
+    vector<cv::Point2f> p2, p1;
+    
+    for (uint i=0;i<F2.mvKeys.size();i++)
+        {
+            // cout<<mSeLastFrame.mvKeys[i].pt.x<<endl;
+            p2.push_back(F2.mvKeys[i].pt);
+        }    
+    cv::calcOpticalFlowPyrLK(F2.mGray, F1.mGray, p2, p1, status, err, cv::Size(15,15), 2, criteria);
+
+    
+    vector<cv::Point2f> good_new1, good_new2;
+
+    for(uint i = 0; i < p2.size(); i++)
+    {
+        if(status[i] == 1) 
+        {   
+            
+            int value = (int)F1.mSegGray.at<uchar>(p1[i]);
+            if (value==0)
+            {   
+                continue;
+            }
+            
+            double len=norm(p2[i]-p1[i]);
+            if (len>10)
+                continue;
+
+            good_new1.push_back(p2[i]);
+            good_new2.push_back(p1[i]);
+        }
+    }
+
+
+    cv::Mat F21;
+    try
+    {
+        cv::Mat F21=cv::findFundamentalMat(good_new1,good_new2,cv::FM_RANSAC,1,0.99);
+        return F21;
+    }
+
+     catch(const cv::Exception& e)
+    {
+        std::cerr <<"Opencv error: "<< e.what() << endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"Standard error: "<< e.what() << endl;;
+    }
+    
+    
+
+    return F21;
+
+}
+
+
 bool Tracking::TrackGeometry()
 {   
 
@@ -830,48 +894,173 @@ bool Tracking::TrackGeometry()
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches321);
     cout<<"Matches: "<<nmatches<<endl;
     
+    cv::Mat F32 =computeFundamentalMat(mSeLastFrame,mLastFrame);
+    cv::Mat F31 =computeFundamentalMat(mSeLastFrame,mCurrentFrame);
+    cv::Mat F21 =computeFundamentalMat(mLastFrame,mCurrentFrame);
+    vector<double> data;
     
-    vector<uchar> status1,status2,status3;
-    vector<float> err;
-    cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
-
-
-    vector<cv::Point2f> p3, p1,p2;
+    int reject1=0;
+    int reject2=0;
     
-    for (uint i=0;i<mSeLastFrame.mvKeys.size();i++)
-        {
-            // cout<<mSeLastFrame.mvKeys[i].pt.x<<endl;
-            p3.push_back(mSeLastFrame.mvKeys[i].pt);
-        }    
-    cv::calcOpticalFlowPyrLK(mSeLastFrame.mSegGray, mCurrentFrame.mSegGray, p3, p1, status1, err, cv::Size(15,15), 2, criteria);
-
-    vector<cv::Point2f> good_new1, good_new2;
-
-    cv::Mat vizimg= cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
-    mCurrentFrame.mSegGray.copyTo(vizimg);
-
+    try
+    {
+        if (F31.empty()||F32.empty()||F21.empty())
+    {
+        return false;
     
-
-
-    // cv::Mat F31=cv::findFundamentalMat(good_new1,good_new2,cv::FM_RANSAC,1,0.99);
-    
-    // try
-    // {
-    //     if (F31.empty()||F32.empty()||F21.empty())
-    //     {
-    //         return false;
+    }
+    for (size_t i=0, iend=mSeLastFrame.mvKeys.size();i<iend; i++)
+    {   
         
-    //     }
+        pair<int,int> idxs=vmatches321[i];
+        // cout<<" "<< i <<" "<< idxs.first<<" "<<idxs.second<<endl;
+        if (mSeLastFrame.mvpMapPoints[i])
+        {
+
+            pair<int,int> idxs=vmatches321[i];
+            cv::KeyPoint kp3=mSeLastFrame.mvKeys[i];
+
+            if (idxs.first==-1)
+                continue;
+            cv::KeyPoint kp2= mLastFrame.mvKeys[idxs.first];
+
+            if (idxs.second==-1)
+            {
+                
+                const double a = kp2.pt.x*F32.at<double>(0,0)+kp2.pt.y*F32.at<double>(1,0)+F32.at<double>(2,0);
+                const double b = kp2.pt.x*F32.at<double>(0,1)+kp2.pt.y*F32.at<double>(1,1)+F32.at<double>(2,1);
+                const double c = kp2.pt.x*F32.at<double>(0,2)+kp2.pt.y*F32.at<double>(1,2)+F32.at<double>(2,2);
+
+                const double num = a*kp3.pt.x+b*kp3.pt.y+c;
+
+                const double den = a*a+b*b;
+
+                if(den==0)
+                    continue;
+                
+                const double d = num*num/den;
+                
+
+                if (!(mLastFrame.mvpMapPoints[idxs.first]))
+                    continue; 
+                if (d>3.84)
+                {   
+                    reject1++; 
+                    MapPoint* pMP = mLastFrame.mvpMapPoints[idxs.first];
+                    mLastFrame.mvpMapPoints[idxs.first]=static_cast<MapPoint*>(NULL);
+                    mLastFrame.mvbOutlier[idxs.first]=false;
+                    pMP->mbTrackInView = false;
+                    pMP->mnLastFrameSeen = mLastFrame.mnId;
+                    pMP->SetBadFlag();
+                } 
+            }
+            if (idxs.second>0)
+            {   
 
 
-    // }
+                // Note: good_new2'*F*good_new1=0
+                cv::KeyPoint kp1= mCurrentFrame.mvKeys[idxs.second];
+                cv::Mat kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
+                cv::Mat kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
+                cv::Mat kp1_h = (cv::Mat_<double>(3, 1) << kp1.pt.x, kp1.pt.y, 1.0);
 
-    cv::imshow("Hello",vizimg);
-    // cv::imshow("Hello2",vizimg2);
-    cv::waitKey(1);
 
-    return false;
+                cv::Mat epi_line31= F31 * kp3_h;
+                cv::Mat epi_line21= F21 * kp2_h;
+
+
+
+
+                const double A = kp1.pt.x*F21.at<double>(0,0)+kp1.pt.y*F21.at<double>(1,0)+F21.at<double>(2,0);
+                const double B = kp1.pt.x*F21.at<double>(0,1)+kp1.pt.y*F21.at<double>(1,1)+F21.at<double>(2,1);
+                const double C = kp1.pt.x*F21.at<double>(0,2)+kp1.pt.y*F21.at<double>(1,2)+F21.at<double>(2,2);
+
+                const double num = A*kp2.pt.x+B*kp2.pt.y+C;
+
+                const double den = A*A+B*B;
+
+                
+                
+
+                if (den!=0)
+                {
+                    const double d = num*num/den;
+                    if (!(mLastFrame.mvpMapPoints[idxs.first]))
+                        continue;
+                    
+                    if (d>3.84)
+                    {   
+                        MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
+                        mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                        mLastFrame.mvbOutlier[i]=false;
+                        pMP1->mbTrackInView = false;
+                        pMP1->mnLastFrameSeen = mLastFrame.mnId;
+                        pMP1->SetBadFlag();
+                        continue;
+                    }
+
+
+
+                }
+
+
+                cv::Mat cross_product=epi_line31.cross(epi_line21);
+                
+                if (cross_product.at<double>(2)==0)
+                    continue;
+                
+                cross_product=cross_product/cross_product.at<double>(2);
+                
+                double x=cross_product.at<double>(0);
+                double y=cross_product.at<double>(1);
+                
+
+                double a=x-kp1.pt.x;
+                double b=y-kp1.pt.y;
+
+                double r=sqrt(a*a+b*b);
+                
+
+                if (!(mSeLastFrame.mvpMapPoints[i]))
+                    continue;
+                
+
+                if (r>15)
+                {   
+                    reject2++;
+                    MapPoint* pMP1 = mSeLastFrame.mvpMapPoints[i];
+                    mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                    mSeLastFrame.mvbOutlier[i]=false;
+                    pMP1->mbTrackInView = false;
+                    pMP1->mnLastFrameSeen = mSeLastFrame.mnId;
+                    pMP1->SetBadFlag();
+                }
+            } 
+
+        }
     
+    }
+        cout<<"Detete by First constrain "<<reject1<<endl;
+        cout<<"Detete by Second constrain "<<reject2<<endl;
+        return true;
+    }
+
+
+    catch(const cv::Exception& e)
+    {
+        std::cerr <<"Opencv error: "<< e.what() << endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"Standard error: "<< e.what() << endl;;
+    }
+    
+
+    
+
+    
+
+    return false;    
     
 }
 

@@ -21,6 +21,8 @@ public:
 
 
     cv::Mat result(cv::Mat Img);
+
+    void exit();
 };
 
 #endif // SEGMENTATION_H
