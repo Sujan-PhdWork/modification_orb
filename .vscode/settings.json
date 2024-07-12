@@ -13,6 +13,7 @@
         "initializer_list": "cpp",
         "utility": "cpp",
         "valarray": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "core": "cpp"
     }
 }

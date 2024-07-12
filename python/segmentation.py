@@ -18,7 +18,7 @@ def segment(frame):
     
     result=results[0].to("cpu")
     if result.masks is None:
-        return np.ones((original_H,original_W),dtype=np.uint8)
+        return np.ones((original_H,original_W),dtype=np.uint8)*255
 
     total_mask=result.masks.data.numpy().astype(np.uint8)
 

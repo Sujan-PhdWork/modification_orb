@@ -123,8 +123,10 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
                 e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
                 e->setMeasurement(obs);
+                float weight = pMP->GetWeight();
+                
                 const float &invSigma2 = pKF->mvInvLevelSigma2[kpUn.octave];
-                e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);
+                e->setInformation(Eigen::Matrix2d::Identity()*invSigma2*weight);
 
                 if(bRobust)
                 {
@@ -151,8 +153,9 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
                 e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
                 e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
                 e->setMeasurement(obs);
+                float weight = pMP->GetWeight();
                 const float &invSigma2 = pKF->mvInvLevelSigma2[kpUn.octave];
-                Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2*weight;
                 e->setInformation(Info);
 
                 if(bRobust)
@@ -296,8 +299,10 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
                 e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
                 e->setMeasurement(obs);
+                float weight = pMP->GetWeight();
+                
                 const float invSigma2 = pFrame->mvInvLevelSigma2[kpUn.octave];
-                e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);
+                e->setInformation(Eigen::Matrix2d::Identity()*invSigma2*weight);
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
                 e->setRobustKernel(rk);
@@ -332,8 +337,9 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
                 e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
                 e->setMeasurement(obs);
+                float weight = pMP->GetWeight();
                 const float invSigma2 = pFrame->mvInvLevelSigma2[kpUn.octave];
-                Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2*weight;
                 e->setInformation(Info);
 
                 g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
@@ -601,8 +607,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                     e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
                     e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId)));
                     e->setMeasurement(obs);
+                    float weight = pMP->GetWeight();
                     const float &invSigma2 = pKFi->mvInvLevelSigma2[kpUn.octave];
-                    e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);
+                    e->setInformation(Eigen::Matrix2d::Identity()*invSigma2*weight);
 
                     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
                     e->setRobustKernel(rk);
@@ -629,8 +636,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                     e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
                     e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId)));
                     e->setMeasurement(obs);
+                    float weight = pMP->GetWeight();
                     const float &invSigma2 = pKFi->mvInvLevelSigma2[kpUn.octave];
-                    Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                    Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2*weight;
                     e->setInformation(Info);
 
                     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
@@ -1146,8 +1154,9 @@ int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
         e12->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id2)));
         e12->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
         e12->setMeasurement(obs1);
+        float weight1 = pMP1->GetWeight();
         const float &invSigmaSquare1 = pKF1->mvInvLevelSigma2[kpUn1.octave];
-        e12->setInformation(Eigen::Matrix2d::Identity()*invSigmaSquare1);
+        e12->setInformation(Eigen::Matrix2d::Identity()*invSigmaSquare1*weight1);
 
         g2o::RobustKernelHuber* rk1 = new g2o::RobustKernelHuber;
         e12->setRobustKernel(rk1);
@@ -1164,8 +1173,9 @@ int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
         e21->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id1)));
         e21->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
         e21->setMeasurement(obs2);
+        float weight2 = pMP2->GetWeight();
         float invSigmaSquare2 = pKF2->mvInvLevelSigma2[kpUn2.octave];
-        e21->setInformation(Eigen::Matrix2d::Identity()*invSigmaSquare2);
+        e21->setInformation(Eigen::Matrix2d::Identity()*invSigmaSquare2*weight2);
 
         g2o::RobustKernelHuber* rk2 = new g2o::RobustKernelHuber;
         e21->setRobustKernel(rk2);

@@ -96,7 +96,8 @@ cv::Mat FrameDrawer::DrawFrame(cv::Mat &segImg)
         const float r = 5;
         const int n = vCurrentKeys.size();
         for(int i=0;i<n;i++)
-        {
+        {   
+
             if(vbVO[i] || vbMap[i])
             {
                 cv::Point2f pt1,pt2;
@@ -106,6 +107,7 @@ cv::Mat FrameDrawer::DrawFrame(cv::Mat &segImg)
                 pt2.y=vCurrentKeys[i].pt.y+r;
 
                 // This is a match to a MapPoint in the map
+
                 if(vbMap[i])
                 {
                     cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
@@ -171,8 +173,8 @@ void FrameDrawer::Update(Tracking *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
-    pTracker->mSegImg.copyTo(mSeg);
-    
+    // pTracker->mSegImg.copyTo(mSeg);
+    cv::bitwise_and(mIm,pTracker->mSegImg,mSeg);
     
 
     

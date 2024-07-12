@@ -890,8 +890,8 @@ cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
 bool Tracking::TrackGeometry()
 {   
 
-    cv::Mat vizimg;
-    cv::cvtColor(mCurrentFrame.mGray, vizimg, cv::COLOR_GRAY2BGR);
+    // cv::Mat vizimg;
+    // cv::cvtColor(mCurrentFrame.mGray, vizimg, cv::COLOR_GRAY2BGR);
     ORBmatcher matcher(0.9,true);
     vector<std::pair<int,int>> vmatches321; 
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches321);
@@ -903,7 +903,7 @@ bool Tracking::TrackGeometry()
     vector<double> data;
     
     int reject1=0;
-    int reject2=0;
+    int add2=0;
     cv::Mat epi_line31,epi_line21;
     cv::Mat kp3_h,kp2_h,kp1_h;
 
@@ -950,16 +950,16 @@ bool Tracking::TrackGeometry()
 
                 if (!(mLastFrame.mvpMapPoints[idxs.first]))
                     continue; 
+                MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
                 if (d>3.84)
                 {   
                     reject1++; 
-                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    // mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-                    // mSeLastFrame.mvbOutlier[i]=false;
-                    // pMP->mbTrackInView = false;
-                    // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
-                    pMP->SetBadFlag();
-                } 
+                    float w=1/(d*d*d);
+                    pMP->SetWeight(w);
+                    pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                    pMP->mbTrackInView = false;
+                }
+
             }
             if (idxs.second>0)
             {   
@@ -979,46 +979,47 @@ bool Tracking::TrackGeometry()
 
 
 
-                // const double A = kp1.pt.x*F21.at<double>(0,0)+kp1.pt.y*F21.at<double>(1,0)+F21.at<double>(2,0);
-                // const double B = kp1.pt.x*F21.at<double>(0,1)+kp1.pt.y*F21.at<double>(1,1)+F21.at<double>(2,1);
-                // const double C = kp1.pt.x*F21.at<double>(0,2)+kp1.pt.y*F21.at<double>(1,2)+F21.at<double>(2,2);
+                const double A = kp1.pt.x*F21.at<double>(0,0)+kp1.pt.y*F21.at<double>(1,0)+F21.at<double>(2,0);
+                const double B = kp1.pt.x*F21.at<double>(0,1)+kp1.pt.y*F21.at<double>(1,1)+F21.at<double>(2,1);
+                const double C = kp1.pt.x*F21.at<double>(0,2)+kp1.pt.y*F21.at<double>(1,2)+F21.at<double>(2,2);
 
-                // const double num = A*kp2.pt.x+B*kp2.pt.y+C;
+                const double num = A*kp2.pt.x+B*kp2.pt.y+C;
 
-                // const double den = A*A+B*B;
+                const double den = A*A+B*B;
 
                 
                 
 
-                // if (den!=0)
-                // {
-                //     const double d = num*num/den;
-                //     if (!(mLastFrame.mvpMapPoints[idxs.first]))
-                //         continue;
+                if (den!=0)
+                {
+                    const double d = num*num/den;
+                    if (!(mLastFrame.mvpMapPoints[idxs.first]))
+                        continue;
                     
-                //     if (d>3.84)
-                //     {   
-                //         reject2++;
-                //         MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
-                //         // mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-                //         // mLastFrame.mvbOutlier[i]=false;
-                //         // pMP1->mbTrackInView = false;
-                //         // pMP1->mnLastFrameSeen = mLastFrame.mnId;
-                //         pMP1->SetBadFlag();
-                //         continue;
-                //     }
+                    if (d>3.84)
+                    {   
+                        MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
+                        float w=1/(d*d*d);
+                        pMP1->SetWeight(d);
+                        // mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                        // mLastFrame.mvbOutlier[i]=false;
+                        pMP1->mbTrackInView = false;
+                        pMP1->mnLastFrameSeen = mLastFrame.mnId;
+                        
+                        continue;
+                    }
 
 
 
-                // }
+                }
 
 
-                cv::Mat tcross_product=epi_line31.cross(epi_line21);
+                cv::Mat cross_product=epi_line31.cross(epi_line21);
                 
-                if (tcross_product.at<double>(2)==0)
+                if (cross_product.at<double>(2)==0)
                     continue;
                 
-                cv::Mat cross_product=tcross_product/tcross_product.at<double>(2);
+                cross_product=cross_product/cross_product.at<double>(2);
                 
                 
 
@@ -1026,20 +1027,12 @@ bool Tracking::TrackGeometry()
                 int x=(int)cross_product.at<double>(0);
                 int y=(int)cross_product.at<double>(1);
                 
+                if (x<0 ||y<0)
+                    continue;
 
                 double a=x-kp1.pt.x;
                 double b=y-kp1.pt.y;
                 
-                // std::ostringstream oss;
-                // oss<<x<<" , "<<y;
-                // std::string text=oss.str();
-                
-                // cv::putText(vizimg, text, cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX ,  1, cv::Scalar(255,0,0), 2, cv::LINE_AA);
-                // if (x<0 ||y<0)
-                    // cout<<" "<<kp1.pt<<" "<<x<<" , "<<y<<" , "<< cross_product <<" "<<tcross_product ;
-                // cv::circle(vizimg,cv::Point(x,y),3,cv::Scalar(0,255,0),-1);
-                // cv::circle(vizimg,kp1.pt,3,cv::Scalar(0,0,255),-1);
-                // cv::line(vizimg,cv::Point(x,y),kp1.pt,cv::Scalar(0,0,255),1);
                 double r=sqrt(a*a+b*b);
                 
 
@@ -1049,19 +1042,19 @@ bool Tracking::TrackGeometry()
 
                 if (r<2)
                 {   
-                    
+                    add2++;                
                     MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    pMP->IncreaseFound(10);
-                    pMP->mnLastFrameSeen = mCurrentFrame.mnId;
-                    pMP->mbTrackInView = false;
+                    pMP->SetWeight(10);
+                    // pMP->mnLastFrameSeen = mCurrentFrame.mnId;
+                    // pMP->mbTrackInView = false;
                 }
             } 
 
         }
     
     }
-    // cout<<"Detete by First constrain "<<reject1<<endl;
-    // cout<<"Detete by Second constrain "<<reject2<<endl;
+    cout<<"Detete by First constrain "<<reject1<<endl;
+    cout<<"Added by Second constrain "<<add2<<endl;
     
     // cv::imshow("Hello",vizimg);
     // cv::imshow("Hello2",vizimg2);

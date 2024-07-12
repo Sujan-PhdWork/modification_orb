@@ -51,6 +51,9 @@ public:
     std::map<KeyFrame*,size_t> GetObservations();
     int Observations();
 
+
+    void SetWeight(float weight);
+    float GetWeight();
     void AddObservation(KeyFrame* pKF,size_t idx);
     void EraseObservation(KeyFrame* pKF);
 
@@ -87,7 +90,7 @@ public:
     long int mnFirstKFid;
     long int mnFirstFrame;
     int nObs;
-
+    float mWeight;
     // Variables used by the tracking
     float mTrackProjX;
     float mTrackProjY;
@@ -108,6 +111,7 @@ public:
     long unsigned int mnCorrectedReference;    
     cv::Mat mPosGBA;
     long unsigned int mnBAGlobalForKF;
+
 
 
     static std::mutex mGlobalMutex;
@@ -145,6 +149,7 @@ protected:
 
      std::mutex mMutexPos;
      std::mutex mMutexFeatures;
+     std::mutex mMutexWeight;
 };
 
 } //namespace ORB_SLAM

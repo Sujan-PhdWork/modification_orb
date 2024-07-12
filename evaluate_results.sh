@@ -22,7 +22,7 @@ do
     base_name=$(basename $file)
     
     # Run the evaluation command and capture the output
-    output=$(python2.7 evaluate_ate.py ../dataset/rgbd_dataset_freiburg3_walking_xyz_validation/groundtruth.txt $file)
+    output=$(python2.7 evaluate_ate.py ../dataset/rgbd_dataset_freiburg3_walking_halfsphere/groundtruth.txt $file)
     
     # Save the output to the output file and the temp file
     echo "$base_name: $output" >> $OUTPUT_FILE
