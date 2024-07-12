@@ -234,9 +234,9 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
 
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
-    cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
+    // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
-    cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
+    // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
     }
     
     
@@ -300,10 +300,10 @@ void Tracking::temp_track()
             bOK=TrackGeometry();  
         }
         
-        cout<<"current frame "<<mCurrentFrame.mnId<<endl;
+        // cout<<"current frame "<<mCurrentFrame.mnId<<endl;
 
-        cout<<" Second last frame " << mSeLastFrame.mnId<<endl;
-        cout<<" last frame " << mLastFrame.mnId<<endl;
+        // cout<<" Second last frame " << mSeLastFrame.mnId<<endl;
+        // cout<<" last frame " << mLastFrame.mnId<<endl;
 
 
     }
@@ -864,8 +864,10 @@ cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
 
     cv::Mat F21;
     try
-    {
+    {    // Note: good_new2'*F*good_new1=0
         cv::Mat F21=cv::findFundamentalMat(good_new1,good_new2,cv::FM_RANSAC,1,0.99);
+        if (F21.rows>3)
+            return cv::Mat();
         return F21;
     }
 
@@ -888,11 +890,12 @@ cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
 bool Tracking::TrackGeometry()
 {   
 
-    
+    cv::Mat vizimg;
+    cv::cvtColor(mCurrentFrame.mGray, vizimg, cv::COLOR_GRAY2BGR);
     ORBmatcher matcher(0.9,true);
     vector<std::pair<int,int>> vmatches321; 
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches321);
-    cout<<"Matches: "<<nmatches<<endl;
+    // cout<<"Matches: "<<nmatches<<endl;
     
     cv::Mat F32 =computeFundamentalMat(mSeLastFrame,mLastFrame);
     cv::Mat F31 =computeFundamentalMat(mSeLastFrame,mCurrentFrame);
@@ -901,11 +904,15 @@ bool Tracking::TrackGeometry()
     
     int reject1=0;
     int reject2=0;
-    
-    try
-    {
-        if (F31.empty()||F32.empty()||F21.empty())
-    {
+    cv::Mat epi_line31,epi_line21;
+    cv::Mat kp3_h,kp2_h,kp1_h;
+
+   
+    if (F31.empty()||F32.empty()||F21.empty())
+    {   
+        // cv::imshow("Hello",vizimg);
+        // cv::imshow("Hello2",vizimg2);
+        // cv::waitKey(1);
         return false;
     
     }
@@ -946,11 +953,11 @@ bool Tracking::TrackGeometry()
                 if (d>3.84)
                 {   
                     reject1++; 
-                    MapPoint* pMP = mLastFrame.mvpMapPoints[idxs.first];
-                    mLastFrame.mvpMapPoints[idxs.first]=static_cast<MapPoint*>(NULL);
-                    mLastFrame.mvbOutlier[idxs.first]=false;
-                    pMP->mbTrackInView = false;
-                    pMP->mnLastFrameSeen = mLastFrame.mnId;
+                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    // mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                    // mSeLastFrame.mvbOutlier[i]=false;
+                    // pMP->mbTrackInView = false;
+                    // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
                     pMP->SetBadFlag();
                 } 
             }
@@ -958,66 +965,81 @@ bool Tracking::TrackGeometry()
             {   
 
 
-                // Note: good_new2'*F*good_new1=0
+               
                 cv::KeyPoint kp1= mCurrentFrame.mvKeys[idxs.second];
-                cv::Mat kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
-                cv::Mat kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
-                cv::Mat kp1_h = (cv::Mat_<double>(3, 1) << kp1.pt.x, kp1.pt.y, 1.0);
+                kp3_h = (cv::Mat_<double>(3, 1) << kp3.pt.x, kp3.pt.y, 1.0);
+                kp2_h = (cv::Mat_<double>(3, 1) << kp2.pt.x, kp2.pt.y, 1.0);
+                kp1_h = (cv::Mat_<double>(3, 1) << kp1.pt.x, kp1.pt.y, 1.0);
 
 
-                cv::Mat epi_line31= F31 * kp3_h;
-                cv::Mat epi_line21= F21 * kp2_h;
+                epi_line31= F31 * kp3_h;
+                epi_line21= F21 * kp2_h;
+                // cout<<epi_line21<<endl;
 
 
 
 
-                const double A = kp1.pt.x*F21.at<double>(0,0)+kp1.pt.y*F21.at<double>(1,0)+F21.at<double>(2,0);
-                const double B = kp1.pt.x*F21.at<double>(0,1)+kp1.pt.y*F21.at<double>(1,1)+F21.at<double>(2,1);
-                const double C = kp1.pt.x*F21.at<double>(0,2)+kp1.pt.y*F21.at<double>(1,2)+F21.at<double>(2,2);
+                // const double A = kp1.pt.x*F21.at<double>(0,0)+kp1.pt.y*F21.at<double>(1,0)+F21.at<double>(2,0);
+                // const double B = kp1.pt.x*F21.at<double>(0,1)+kp1.pt.y*F21.at<double>(1,1)+F21.at<double>(2,1);
+                // const double C = kp1.pt.x*F21.at<double>(0,2)+kp1.pt.y*F21.at<double>(1,2)+F21.at<double>(2,2);
 
-                const double num = A*kp2.pt.x+B*kp2.pt.y+C;
+                // const double num = A*kp2.pt.x+B*kp2.pt.y+C;
 
-                const double den = A*A+B*B;
+                // const double den = A*A+B*B;
 
                 
                 
 
-                if (den!=0)
-                {
-                    const double d = num*num/den;
-                    if (!(mLastFrame.mvpMapPoints[idxs.first]))
-                        continue;
+                // if (den!=0)
+                // {
+                //     const double d = num*num/den;
+                //     if (!(mLastFrame.mvpMapPoints[idxs.first]))
+                //         continue;
                     
-                    if (d>3.84)
-                    {   
-                        MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
-                        mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-                        mLastFrame.mvbOutlier[i]=false;
-                        pMP1->mbTrackInView = false;
-                        pMP1->mnLastFrameSeen = mLastFrame.mnId;
-                        pMP1->SetBadFlag();
-                        continue;
-                    }
+                //     if (d>3.84)
+                //     {   
+                //         reject2++;
+                //         MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
+                //         // mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                //         // mLastFrame.mvbOutlier[i]=false;
+                //         // pMP1->mbTrackInView = false;
+                //         // pMP1->mnLastFrameSeen = mLastFrame.mnId;
+                //         pMP1->SetBadFlag();
+                //         continue;
+                //     }
 
 
 
-                }
+                // }
 
 
-                cv::Mat cross_product=epi_line31.cross(epi_line21);
+                cv::Mat tcross_product=epi_line31.cross(epi_line21);
                 
-                if (cross_product.at<double>(2)==0)
+                if (tcross_product.at<double>(2)==0)
                     continue;
                 
-                cross_product=cross_product/cross_product.at<double>(2);
+                cv::Mat cross_product=tcross_product/tcross_product.at<double>(2);
                 
-                double x=cross_product.at<double>(0);
-                double y=cross_product.at<double>(1);
+                
+
+
+                int x=(int)cross_product.at<double>(0);
+                int y=(int)cross_product.at<double>(1);
                 
 
                 double a=x-kp1.pt.x;
                 double b=y-kp1.pt.y;
-
+                
+                // std::ostringstream oss;
+                // oss<<x<<" , "<<y;
+                // std::string text=oss.str();
+                
+                // cv::putText(vizimg, text, cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX ,  1, cv::Scalar(255,0,0), 2, cv::LINE_AA);
+                // if (x<0 ||y<0)
+                    // cout<<" "<<kp1.pt<<" "<<x<<" , "<<y<<" , "<< cross_product <<" "<<tcross_product ;
+                // cv::circle(vizimg,cv::Point(x,y),3,cv::Scalar(0,255,0),-1);
+                // cv::circle(vizimg,kp1.pt,3,cv::Scalar(0,0,255),-1);
+                // cv::line(vizimg,cv::Point(x,y),kp1.pt,cv::Scalar(0,0,255),1);
                 double r=sqrt(a*a+b*b);
                 
 
@@ -1025,42 +1047,28 @@ bool Tracking::TrackGeometry()
                     continue;
                 
 
-                if (r>15)
+                if (r<2)
                 {   
-                    reject2++;
-                    MapPoint* pMP1 = mSeLastFrame.mvpMapPoints[i];
-                    mSeLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-                    mSeLastFrame.mvbOutlier[i]=false;
-                    pMP1->mbTrackInView = false;
-                    pMP1->mnLastFrameSeen = mSeLastFrame.mnId;
-                    pMP1->SetBadFlag();
+                    
+                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    pMP->IncreaseFound(10);
+                    pMP->mnLastFrameSeen = mCurrentFrame.mnId;
+                    pMP->mbTrackInView = false;
                 }
             } 
 
         }
     
     }
-        cout<<"Detete by First constrain "<<reject1<<endl;
-        cout<<"Detete by Second constrain "<<reject2<<endl;
-        return true;
-    }
-
-
-    catch(const cv::Exception& e)
-    {
-        std::cerr <<"Opencv error: "<< e.what() << endl;
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr <<"Standard error: "<< e.what() << endl;;
-    }
+    // cout<<"Detete by First constrain "<<reject1<<endl;
+    // cout<<"Detete by Second constrain "<<reject2<<endl;
     
+    // cv::imshow("Hello",vizimg);
+    // cv::imshow("Hello2",vizimg2);
+    // cv::waitKey(1);
+    // cout<<endl;
 
-    
-
-    
-
-    return false;    
+    return true; 
     
 }
 

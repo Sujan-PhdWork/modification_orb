@@ -293,7 +293,7 @@ void Frame::checkNeighbour(std::vector<cv::KeyPoint> Keys_temp, cv::Mat Des_temp
     // cout<<mask.type()<<endl;
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    const double proximityThreshold = 10.0; // Adjust as needed
+    const double proximityThreshold = 8.0; // Adjust as needed
     
     for (uint i=0; i<Keys_temp.size(); i++)
     {   
