@@ -111,6 +111,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
     mpTracker->SetLoopClosing(mpLoopCloser);
+    mpTracker->SetMapREG(mpMapREG);
 
     mpLocalMapper->SetTracker(mpTracker);
     mpLocalMapper->SetLoopCloser(mpLoopCloser);
@@ -214,9 +215,11 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     
     
     cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
+    if (!im.empty())
+    {
     cv::Mat result=mSegmentation->result(im);
     result.copyTo(segImg);
-
+    }
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,segImg,timestamp);
 
     unique_lock<mutex> lock2(mMutexState);
@@ -313,6 +316,7 @@ void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
     mpLoopCloser->RequestFinish();
+    mpMapREG->RequestFinish();
     if(mpViewer)
     {
         mpViewer->RequestFinish();

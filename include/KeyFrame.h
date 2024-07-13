@@ -187,6 +187,11 @@ public:
     const int mnMaxX;
     const int mnMaxY;
     const cv::Mat mK;
+    
+    // Image & depth
+    cv::Mat mGray;
+    cv::Mat mSegGray;
+    cv::Mat mDepthImg;
 
 
     // The following variables need to be accessed trough a mutex to be thread safe.
@@ -199,10 +204,7 @@ protected:
 
     cv::Mat Cw; // Stereo middel point. Only for visualization
 
-    // Image & depth
-    cv::Mat mGray;
-    cv::Mat mSegGray;
-    cv::Mat mDepthImg;
+    
 
 
     // MapPoints associated to keypoints

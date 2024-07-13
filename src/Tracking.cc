@@ -158,6 +158,11 @@ void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
     mpLoopClosing=pLoopClosing;
 }
 
+void Tracking::SetMapREG(MapREG *pMapreg)
+{
+    mpMapREG=pMapreg;
+}
+
 void Tracking::SetViewer(Viewer *pViewer)
 {
     mpViewer=pViewer;
@@ -1450,6 +1455,8 @@ void Tracking::CreateNewKeyFrame()
     }
 
     mpLocalMapper->InsertKeyFrame(pKF);
+    if (mpMapREG->KeyframesInQueue()<3)
+        mpMapREG->InsertKeyFrame(pKF);
 
     mpLocalMapper->SetNotStop(false);
 

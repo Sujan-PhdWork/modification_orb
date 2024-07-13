@@ -48,6 +48,7 @@ class FrameDrawer;
 class Map;
 class LocalMapping;
 class LoopClosing;
+class MapREG;
 class System;
 
 class Tracking
@@ -64,6 +65,7 @@ public:
 
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
+    void SetMapREG(MapREG *pMapreg);
     void SetViewer(Viewer* pViewer);
 
     // Load new settings
@@ -158,6 +160,7 @@ protected:
     //Other Thread Pointers
     LocalMapping* mpLocalMapper;
     LoopClosing* mpLoopClosing;
+    MapREG* mpMapREG;
 
     //ORB
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;

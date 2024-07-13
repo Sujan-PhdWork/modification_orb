@@ -16,13 +16,33 @@ namespace ORB_SLAM2
         MapREG(Map* pMap);
         void Run();
         void InsertKeyFrame(KeyFrame *pKF);
-        bool CheckNewKeyFrames();
-        void ProcessNewKeyFrame();
+        
+        
+        void RequestFinish();
+        bool CheckFinish();
+        
+
+        int KeyframesInQueue()
+        {
+        unique_lock<std::mutex> lock(mMutexNewKFs);
+        return mlNewKeyFrames.size();
+        }
     
     protected:
+
+
+
+        bool CheckNewKeyFrames();
+        void ProcessNewKeyFrame();
+        void print_pointcloud();
         Map* mpMap;
+        bool mbFinishRequested;
+
+        
+        
         KeyFrame* mpCurrentKeyFrame;
         std::mutex mMutexNewKFs;
+        std::mutex mMutexFinish;
         std::list<KeyFrame*> mlNewKeyFrames;
         
     

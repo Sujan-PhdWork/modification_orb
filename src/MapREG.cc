@@ -16,16 +16,32 @@ MapREG::MapREG(Map *pMap): mpMap(pMap)
 void MapREG::Run()
 {
     while(1)
-    {
-        cout<<"Thread Running"<<endl;
+    {   
+        
+        if(CheckNewKeyFrames())
+        {
+            ProcessNewKeyFrame();
+            print_pointcloud();
+            if (CheckFinish())
+                break; 
+        }
 
         usleep(3000);
     }
 }
 
+
+
+void MapREG::print_pointcloud()
+{
+    cv::Mat mGray=mpCurrentKeyFrame->mGray;
+    cv::imshow("new",mGray);
+    cv::waitKey(1);
+}
 void MapREG::InsertKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexNewKFs);
+    
     mlNewKeyFrames.push_back(pKF);
 }
 
@@ -44,6 +60,19 @@ void MapREG::ProcessNewKeyFrame()
         mlNewKeyFrames.pop_front();
     }
 
+}
+
+
+void MapREG::RequestFinish()
+{
+    unique_lock<mutex> lock(mMutexFinish);
+    mbFinishRequested = true;
+}
+
+bool MapREG::CheckFinish()
+{
+    unique_lock<mutex> lock(mMutexFinish);
+    return mbFinishRequested;
 }
 
 }

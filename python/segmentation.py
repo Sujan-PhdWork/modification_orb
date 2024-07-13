@@ -15,7 +15,6 @@ def segment(frame):
     original_H=frame.shape[0]
     frame=frame.astype(np.uint8)
     results = model(frame,verbose=False)
-    
     result=results[0].to("cpu")
     if result.masks is None:
         return np.ones((original_H,original_W),dtype=np.uint8)*255
