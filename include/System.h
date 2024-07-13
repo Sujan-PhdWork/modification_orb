@@ -40,6 +40,7 @@
 #include "KeyFrameDatabase.h"
 #include "ORBVocabulary.h"
 #include "Viewer.h"
+#include "MapREG.h"
 
 namespace ORB_SLAM2
 {
@@ -50,6 +51,7 @@ class Map;
 class Tracking;
 class LocalMapping;
 class LoopClosing;
+class MapREG;
 
 class System
 {
@@ -160,11 +162,16 @@ private:
     FrameDrawer* mpFrameDrawer;
     MapDrawer* mpMapDrawer;
 
+
+    // 3d registration of point cloud
+
+    MapREG* mpMapREG;
     // System threads: Local Mapping, Loop Closing, Viewer.
     // The Tracking thread "lives" in the main execution thread that creates the System object.
     std::thread* mptLocalMapping;
     std::thread* mptLoopClosing;
     std::thread* mptViewer;
+    std::thread* mptMapREG;
 
     // Reset flag
     std::mutex mMutexReset;

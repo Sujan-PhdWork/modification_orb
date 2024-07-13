@@ -199,6 +199,12 @@ protected:
 
     cv::Mat Cw; // Stereo middel point. Only for visualization
 
+    // Image & depth
+    cv::Mat mGray;
+    cv::Mat mSegGray;
+    cv::Mat mDepthImg;
+
+
     // MapPoints associated to keypoints
     std::vector<MapPoint*> mvpMapPoints;
 

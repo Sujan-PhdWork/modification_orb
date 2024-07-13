@@ -73,6 +73,7 @@ src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
 src/Segmentation.cc
+src/MapREG.cc
 )
 
 target_link_libraries(${PROJECT_NAME}

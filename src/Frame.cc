@@ -49,6 +49,11 @@ Frame::Frame(const Frame &frame)
      mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
      mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2), mGray(frame.mGray),mSegGray(frame.mSegGray)
 {
+    int H=mGray.rows;
+    int W=mGray.cols;
+    mDepthImg=cv::Mat::zeros(H,W,CV_16U);
+    frame.mDepthImg.copyTo(mDepthImg);
+
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++)
             mGrid[i][j]=frame.mGrid[i][j];
@@ -120,6 +125,12 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mGray(imGray.clone())
 {   
+
+    int H=imGray.rows;
+    int W=imGray.cols;
+    mDepthImg=cv::Mat::zeros(H,W,CV_16U);
+    imDepth.copyTo(mDepthImg);
+    
     cv::Mat mask;
     cv::bitwise_and(imGray,imGray,mSegGray,mask);
     

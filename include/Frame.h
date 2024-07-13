@@ -166,8 +166,11 @@ public:
 
     // Camera pose.
     cv::Mat mTcw;
+    
+    // Image & depth
     cv::Mat mGray;
     cv::Mat mSegGray;
+    cv::Mat mDepthImg;
 
     // Current and Next Frame id.
     static long unsigned int nNextId;
