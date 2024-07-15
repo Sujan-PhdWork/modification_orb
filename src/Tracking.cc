@@ -247,16 +247,6 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     
 
     Track();
-
-    
-    
-
-    
-    
-
-    
-    
-
     return mCurrentFrame.mTcw.clone();
 }
 

@@ -46,7 +46,7 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
     int H=mGray.rows;
     int W=mGray.cols;
     mDepthImg=cv::Mat::zeros(H,W,CV_16U);
-    
+    F.mDepthImg.copyTo(mDepthImg);
     mnId=nNextId++;
 
     mGrid.resize(mnGridCols);

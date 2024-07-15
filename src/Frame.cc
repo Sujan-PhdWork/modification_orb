@@ -131,6 +131,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
     mDepthImg=cv::Mat::zeros(H,W,CV_16U);
     imDepth.copyTo(mDepthImg);
     
+    
     cv::Mat mask;
     cv::bitwise_and(imGray,imGray,mSegGray,mask);
     

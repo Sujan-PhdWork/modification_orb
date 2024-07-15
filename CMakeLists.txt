@@ -7,7 +7,6 @@ ENDIF()
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
-
 set(EXTERNALS "${PROJECT_SOURCE_DIR}/Thirdparty")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
@@ -30,6 +29,12 @@ endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
+
+find_package(PCL 1.13 REQUIRED)
+# list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
+
+add_definitions( ${PCL_DEFINITIONS} )
+
 find_package(OpenCV 3.0 QUIET)
 if(NOT OpenCV_FOUND)
    find_package(OpenCV 2.4.3 QUIET)
@@ -46,6 +51,7 @@ ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
+${PCL_INCLUDE_DIRS}
 )
 
 add_subdirectory(${EXTERNALS}/pybind11)
@@ -83,6 +89,7 @@ ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 pybind11::embed
+${PCL_LIBRARIES}
 )
 
 # Build examples

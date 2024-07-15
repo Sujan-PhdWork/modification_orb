@@ -336,6 +336,7 @@ void System::Shutdown()
 
 void System::SaveTrajectoryTUM(const string &filename)
 {
+    mpMapREG->SavePCD();
     cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
     if(mSensor==MONOCULAR)
     {
@@ -430,6 +431,9 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     f.close();
     cout << endl << "trajectory saved!" << endl;
 }
+
+
+
 
 void System::SaveTrajectoryKITTI(const string &filename)
 {
