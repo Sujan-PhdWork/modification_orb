@@ -176,7 +176,7 @@ void FrameDrawer::Update(Tracking *pTracker)
     // pTracker->mSegImg.copyTo(mSeg);
     cv::bitwise_and(mIm,pTracker->mSegImg,mSeg);
     
-
+   
     
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
     N = mvCurrentKeys.size();

@@ -192,6 +192,7 @@ public:
     cv::Mat mGray;
     cv::Mat mSegGray;
     cv::Mat mDepthImg;
+    cv::Mat mImRGB;
 
 
     // The following variables need to be accessed trough a mutex to be thread safe.

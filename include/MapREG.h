@@ -26,56 +26,30 @@
 #include "Tracking.h"
 #include "Map.h"
 
-typedef pcl::PointXYZ PointT;
+typedef pcl::PointXYZRGBA PointT;
 typedef pcl::PointCloud<PointT> PointCloud;
+
 
 using namespace std;
 namespace ORB_SLAM2
 {   
+    class KeyFrame;
+
     class MapREG
     {
     
     public:
-        MapREG(Map* pMap);
-        void Run();
-        void InsertKeyFrame(KeyFrame *pKF);
-        
-        
-        void RequestFinish();
-        bool CheckFinish();
-        void SavePCD();
-
-
-        int KeyframesInQueue()
-        {
-        unique_lock<std::mutex> lock(mMutexNewKFs);
-        return mlNewKeyFrames.size();
-        }
-        pcl::visualization::CloudViewer viewer;
-        PointCloud::Ptr output;
-
-        int counter;
-
-
-    
-    protected:
-
-
-
-        bool CheckNewKeyFrames();
-        void ProcessNewKeyFrame();
-        PointCloud::Ptr image2PointCloud();
-        void REGISTER_PointCloud();
+        MapREG();
+        PointCloud::Ptr output;        
+        PointCloud::Ptr image2PointCloud(KeyFrame* kF);
+        void REGISTER_PointCloud(KeyFrame *kF);
+        void PCD_VIEW();
         Eigen::Matrix4f cvMat4x4ToEigen(const cv::Mat& cv_mat);
+        int countZeroElements(KeyFrame* kF);
         Map* mpMap;
-        bool mbFinishRequested;
-
-        
-        
         KeyFrame* mpCurrentKeyFrame;
-        std::mutex mMutexNewKFs;
-        std::mutex mMutexFinish;
-        std::list<KeyFrame*> mlNewKeyFrames;
+        pcl::visualization::PCLVisualizer::Ptr viewer;
+        
         
     
     };

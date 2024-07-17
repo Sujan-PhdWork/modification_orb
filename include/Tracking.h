@@ -96,6 +96,7 @@ public:
 
     // Current Frame
     Frame mCurrentFrame;
+    cv::Mat mImRGB;
     cv::Mat mImGray;
     cv::Mat mSegImg;
 
@@ -160,7 +161,6 @@ protected:
     //Other Thread Pointers
     LocalMapping* mpLocalMapper;
     LoopClosing* mpLoopClosing;
-    MapREG* mpMapREG;
 
     //ORB
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;

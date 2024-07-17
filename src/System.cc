@@ -97,8 +97,6 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpLoopCloser = new LoopClosing(mpMap, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR);
     mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
-    mpMapREG = new MapREG(mpMap);
-    mptMapREG = new thread(&ORB_SLAM2::MapREG::Run, mpMapREG);
 
     //Initialize the Viewer thread and launch
     if(bUseViewer)
@@ -111,7 +109,6 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
     mpTracker->SetLoopClosing(mpLoopCloser);
-    mpTracker->SetMapREG(mpMapREG);
 
     mpLocalMapper->SetTracker(mpTracker);
     mpLocalMapper->SetLoopCloser(mpLoopCloser);
@@ -316,7 +313,6 @@ void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
     mpLoopCloser->RequestFinish();
-    mpMapREG->RequestFinish();
     if(mpViewer)
     {
         mpViewer->RequestFinish();
@@ -336,7 +332,7 @@ void System::Shutdown()
 
 void System::SaveTrajectoryTUM(const string &filename)
 {
-    mpMapREG->SavePCD();
+    
     cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
     if(mSensor==MONOCULAR)
     {
@@ -431,6 +427,48 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     f.close();
     cout << endl << "trajectory saved!" << endl;
 }
+
+void System::SavePCD()
+{
+    cout << endl << "Saving point cloud "  " ..." << endl;
+
+    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
+    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+
+    // Transform all keyframes so that the first keyframe is at the origin.
+    // After a loop closure the first keyframe might not be at the origin.
+    //cv::Mat Two = vpKFs[0]->GetPoseInverse();
+
+
+    mpMapREG = new MapREG();
+
+    for(size_t i=0; i<vpKFs.size(); i++)
+    {
+        KeyFrame* pKF = vpKFs[i];
+
+       // pKF->SetPose(pKF->GetPose()*Two);
+
+        if(pKF->isBad())
+            continue;
+
+        mpMapREG->REGISTER_PointCloud(pKF);
+
+
+        // cv::Mat R = pKF->GetRotation().t();
+        // vector<float> q = Converter::toQuaternion(R);
+        // cv::Mat t = pKF->GetCameraCenter();
+        // f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2)
+        //   << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+
+    }
+    mpMapREG->PCD_VIEW();
+    PointCloud::Ptr output= mpMapREG->output;
+    pcl::io::savePCDFile ("Keyframe.pcd", *output ,true);
+    cout << endl << "PCD saved!" << endl;
+}
+
+
+
 
 
 

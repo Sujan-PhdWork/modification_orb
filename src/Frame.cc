@@ -47,11 +47,11 @@ Frame::Frame(const Frame &frame)
      mpReferenceKF(frame.mpReferenceKF), mnScaleLevels(frame.mnScaleLevels),
      mfScaleFactor(frame.mfScaleFactor), mfLogScaleFactor(frame.mfLogScaleFactor),
      mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
-     mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2), mGray(frame.mGray),mSegGray(frame.mSegGray)
+     mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2), mGray(frame.mGray),mSegGray(frame.mSegGray),mImRGB(frame.mImRGB)
 {
     int H=mGray.rows;
     int W=mGray.cols;
-    mDepthImg=cv::Mat::zeros(H,W,CV_16U);
+    mDepthImg=cv::Mat::zeros(H,W,CV_32F);
     frame.mDepthImg.copyTo(mDepthImg);
 
     for(int i=0;i<FRAME_GRID_COLS;i++)
@@ -121,21 +121,20 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const cv::Mat &SegIm
     AssignFeaturesToGrid();
 }
 
-Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegImg, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
+Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegImg, const cv::Mat &ImRGB ,const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mGray(imGray.clone())
 {   
 
     int H=imGray.rows;
     int W=imGray.cols;
-    mDepthImg=cv::Mat::zeros(H,W,CV_16U);
+    mDepthImg=cv::Mat::zeros(H,W,CV_32F);
     imDepth.copyTo(mDepthImg);
     
     
-    cv::Mat mask;
-    cv::bitwise_and(imGray,imGray,mSegGray,mask);
     
-
+    cv::bitwise_and(imGray,imGray,mSegGray,SegImg);
+    cv::bitwise_and(ImRGB,ImRGB,mImRGB,SegImg);
     // Frame ID
     mnId=nNextId++;
     // Scale Level Info

@@ -158,10 +158,6 @@ void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
     mpLoopClosing=pLoopClosing;
 }
 
-void Tracking::SetMapREG(MapREG *pMapreg)
-{
-    mpMapREG=pMapreg;
-}
 
 void Tracking::SetViewer(Viewer *pViewer)
 {
@@ -211,6 +207,7 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
 
 cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat &segImg, const double &timestamp)
 {
+    mImRGB =imRGB.clone();
     mImGray = imRGB;
     mSegImg=segImg; 
     
@@ -235,7 +232,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
     // mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-    mCurrentFrame = Frame(mImGray,imDepth,segImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    mCurrentFrame = Frame(mImGray,imDepth,segImg,mImRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
@@ -1445,8 +1442,7 @@ void Tracking::CreateNewKeyFrame()
     }
 
     mpLocalMapper->InsertKeyFrame(pKF);
-    if (mpMapREG->KeyframesInQueue()<3)
-        mpMapREG->InsertKeyFrame(pKF);
+    
 
     mpLocalMapper->SetNotStop(false);
 
