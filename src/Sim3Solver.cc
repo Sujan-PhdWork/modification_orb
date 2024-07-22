@@ -161,7 +161,7 @@ cv::Mat Sim3Solver::iterate(int nIterations, bool &bNoMore, vector<bool> &vbInli
         mnIterations++;
 
         vAvailableIndices = mvAllIndices;
-
+        DUtils::Random::SeedRand(10);
         // Get min set of points
         for(short i = 0; i < 3; ++i)
         {

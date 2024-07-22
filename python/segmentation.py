@@ -14,7 +14,24 @@ def segment(frame):
     original_W=frame.shape[1]
     original_H=frame.shape[0]
     frame=frame.astype(np.uint8)
-    results = model(frame,verbose=False)
+    # lable_image=np.zeros([original_H,original_W],dtype=np.uint8)
+    lable_image1=frame_mask(frame)
+    lable_image2=frame_mask(frame)
+    lable_image=cv2.bitwise_or(lable_image1,lable_image2)
+
+    kernel = np.ones((11,11), np.uint8) 
+    
+    lable_image=lable_image*255
+    img_dialation = cv2.dilate(lable_image, kernel, iterations=1) 
+    img_dialation = cv2.bitwise_not(img_dialation)
+    return img_dialation
+
+
+def frame_mask(frame):
+    original_W=frame.shape[1]
+    original_H=frame.shape[0]
+    
+    results = model(frame,verbose=False,seed=999)
     result=results[0].to("cpu")
     if result.masks is None:
         return np.ones((original_H,original_W),dtype=np.uint8)*255
@@ -33,15 +50,8 @@ def segment(frame):
             continue
 
         lable_image=cv2.bitwise_or(lable_image,total_mask[i])
-    kernel = np.ones((13,13), np.uint8) 
-    lable_image=lable_image*255
-    img_dialation = cv2.dilate(lable_image, kernel, iterations=1) 
-    img_dialation = cv2.bitwise_not(img_dialation)
-    return img_dialation
 
-
-
-
+    return lable_image
 
 
 

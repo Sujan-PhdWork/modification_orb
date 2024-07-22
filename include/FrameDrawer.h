@@ -62,6 +62,7 @@ protected:
     int mnTracked, mnTrackedVO;
     vector<cv::KeyPoint> mvIniKeys;
     vector<int> mvIniMatches;
+    vector<double> mWeight;
     int mState;
 
     Map* mpMap;

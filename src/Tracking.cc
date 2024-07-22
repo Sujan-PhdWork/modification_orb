@@ -232,14 +232,15 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
     // mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-    mCurrentFrame = Frame(mImGray,imDepth,segImg,mImRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
-
+    mCurrentFrame = Frame(mImGray,imDepth,mSegImg,mImRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+    // if (cv::countNonZero(mSegImg)>10)
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
     // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
     // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
     }
+    
     
     
 
@@ -865,11 +866,11 @@ cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
 
      catch(const cv::Exception& e)
     {
-        std::cerr <<"Opencv error: "<< e.what() << endl;
+        // std::cerr <<"Opencv error: "<< e.what() << endl;
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"Standard error: "<< e.what() << endl;;
+        // std::cerr <<"Standard error: "<< e.what() << endl;;
     }
     
     
@@ -946,10 +947,10 @@ bool Tracking::TrackGeometry()
                 if (d>3.84)
                 {   
                     reject1++; 
-                    float w=1/(d*d*d);
+                    double w=1/(d*d*d);
                     pMP->SetWeight(w);
-                    pMP->mnLastFrameSeen = mSeLastFrame.mnId;
-                    pMP->mbTrackInView = false;
+                    // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                    // pMP->mbTrackInView = false;
                 }
 
             }
@@ -982,28 +983,28 @@ bool Tracking::TrackGeometry()
                 
                 
 
-                if (den!=0)
-                {
-                    const double d = num*num/den;
-                    if (!(mLastFrame.mvpMapPoints[idxs.first]))
-                        continue;
+                // if (den!=0)
+                // {
+                //     const double d = num*num/den;
+                //     if (!(mLastFrame.mvpMapPoints[idxs.first]))
+                //         continue;
                     
-                    if (d>3.84)
-                    {   
-                        MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
-                        float w=1/(d*d*d);
-                        pMP1->SetWeight(d);
-                        // mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
-                        // mLastFrame.mvbOutlier[i]=false;
-                        pMP1->mbTrackInView = false;
-                        pMP1->mnLastFrameSeen = mLastFrame.mnId;
+                //     if (d>3.84)
+                //     {   
+                //         MapPoint* pMP1 = mLastFrame.mvpMapPoints[idxs.first];
+                //         double w=1/(d*d*d);
+                //         pMP1->SetWeight(w);
+                //         // mLastFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
+                //         // mLastFrame.mvbOutlier[i]=false;
+                //         pMP1->mbTrackInView = false;
+                //         pMP1->mnLastFrameSeen = mLastFrame.mnId;
                         
-                        continue;
-                    }
+                //         continue;
+                //     }
 
 
 
-                }
+                // }
 
 
                 cv::Mat cross_product=epi_line31.cross(epi_line21);
@@ -1036,7 +1037,8 @@ bool Tracking::TrackGeometry()
                 {   
                     add2++;                
                     MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    pMP->SetWeight(10);
+                    pMP->SetWeight(3.0f);
+                    // cv::circle(vizimg,kp1.pt,5,cv::Scalar(255,0,0),-1);
                     // pMP->mnLastFrameSeen = mCurrentFrame.mnId;
                     // pMP->mbTrackInView = false;
                 }
@@ -1045,12 +1047,12 @@ bool Tracking::TrackGeometry()
         }
     
     }
-    cout<<"Detete by First constrain "<<reject1<<endl;
-    cout<<"Added by Second constrain "<<add2<<endl;
+    // cout<<"Detete by First constrain "<<reject1<<endl;
+    // cout<<"Added by Second constrain "<<add2<<endl;
     
-    // cv::imshow("Hello",vizimg);
+    //cv::imshow("Hello",vizimg);
     // cv::imshow("Hello2",vizimg2);
-    // cv::waitKey(1);
+    //cv::waitKey(1);
     // cout<<endl;
 
     return true; 

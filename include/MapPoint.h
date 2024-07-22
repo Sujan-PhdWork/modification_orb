@@ -90,7 +90,7 @@ public:
     long int mnFirstKFid;
     long int mnFirstFrame;
     int nObs;
-    float mWeight;
+    double mWeight;
     // Variables used by the tracking
     float mTrackProjX;
     float mTrackProjY;

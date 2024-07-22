@@ -3,48 +3,63 @@
 # Define the result directory
 RESULT_DIR="result"
 
-# Define the output file
-OUTPUT_FILE="evaluation_results.txt"
+# Define the output file for storing the evaluation results
+EVALUATION_RESULTS="evaluation_results.txt"
 
-# Create or clear the output file
-> $OUTPUT_FILE
+# Temporary files to store individual results
+TMP_RMSE="tmp_rmse.txt"
+TMP_MEAN="tmp_mean.txt"
+TMP_MEDIAN="tmp_median.txt"
+TMP_STD="tmp_std.txt"
 
-# Temporary file to store the floating-point outputs
-TEMP_FILE="temp_outputs.txt"
-> $TEMP_FILE
+# Clear the output file if it already exists
+> $EVALUATION_RESULTS
 
+# Clear temporary files
+> $TMP_RMSE
+> $TMP_MEAN
+> $TMP_MEDIAN
+> $TMP_STD
 
-
-# Loop through each text file in the result directory
-for file in $RESULT_DIR/*.txt
+# Loop over the result files
+for result_file in $RESULT_DIR/*.txt
 do
-    # Extract the base name of the file (e.g., 1.txt)
-    base_name=$(basename $file)
+    # Extract the file number (e.g., 1, 2, 3, etc.)
+    file_number=$(basename $result_file .txt)
     
-    # Run the evaluation command and capture the output
-    output=$(python2.7 evaluate_ate.py ../dataset/rgbd_dataset_freiburg3_walking_halfsphere/groundtruth.txt $file)
+    # Run the python command and capture the output
+    output=$(python2.7 evaluate_ate.py ../dataset/rgbd_dataset_freiburg3_walking_xyz/groundtruth.txt $result_file)
     
-    # Save the output to the output file and the temp file
-    echo "$base_name: $output" >> $OUTPUT_FILE
-    echo $output >> $TEMP_FILE
+    # Extract values from the output
+    rmse=$(echo $output | cut -d',' -f1 | xargs) # rmse value
+    mean=$(echo $output | cut -d',' -f2 | xargs) # mean value
+    median=$(echo $output | cut -d',' -f3 | xargs) # median value
+    std=$(echo $output | cut -d',' -f4 | xargs) # std value
+    
+    # Append the output to the evaluation results file with the file number
+    echo "Results for ${file_number}.txt: $output" >> $EVALUATION_RESULTS
+    
+    # Append the values to the temporary files
+    echo $rmse >> $TMP_RMSE
+    echo $mean >> $TMP_MEAN
+    echo $median >> $TMP_MEDIAN
+    echo $std >> $TMP_STD
 done
 
-# Calculate the mean and standard deviation using awk
-mean=$(awk '{sum+=$1} END {print sum/NR}' $TEMP_FILE)
-stddev=$(awk '{x[NR]=$1; sum+=$1} END {mean=sum/NR; for (i=1;i<=NR;i++){sumsq+=(x[i]-mean)^2} print sqrt(sumsq/NR)}' $TEMP_FILE)
+# Compute the mean of rmse, mean, median, and std
+mean_rmse=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_RMSE)
+mean_mean=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_MEAN)
+mean_median=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_MEDIAN)
+mean_std=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_STD)
 
-median=$(sort -n $TEMP_FILE | awk '{a[NR]=$1} END {if (NR%2==1) {print a[(NR+1)/2]} else {print (a[NR/2] + a[NR/2+1])/2}}')
+# Append the averages to the evaluation results file
+echo -e "\nMean RMSE: $mean_rmse" >> $EVALUATION_RESULTS
+echo "Mean Mean: $mean_mean" >> $EVALUATION_RESULTS
+echo "Mean Median: $mean_median" >> $EVALUATION_RESULTS
+echo "Mean Std: $mean_std" >> $EVALUATION_RESULTS
 
-# Append the mean, median, and standard deviation to the output file
-echo "Mean: $mean" >> $OUTPUT_FILE
-echo "Median: $median" >> $OUTPUT_FILE
-echo "Standard Deviation: $stddev" >> $OUTPUT_FILE
-
-# Print the mean, median, and standard deviation to the terminal
-echo "Mean: $mean"
-echo "Median: $median"
-echo "Standard Deviation: $stddev"
-
-# Remove the temporary file
-rm $TEMP_FILE
+echo -e "\nMean RMSE: $mean_rmse" 
+echo "Mean Mean: $mean_mean" 
+echo "Mean Median: $mean_median"
+echo "Mean Std: $mean_std"
 

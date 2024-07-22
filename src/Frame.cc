@@ -290,21 +290,22 @@ void Frame::ExtractORB(int flag, const cv::Mat &im, const cv::Mat &mask)
 
 
 void Frame::checkNeighbour(std::vector<cv::KeyPoint> Keys_temp, cv::Mat Des_temp, std::vector<cv::KeyPoint> &Keys,cv::Mat& Des,cv::Mat mask)
-{
-    std::vector<cv::Point2f> offsets = {
-        cv::Point2f(10, 0),
-        cv::Point2f(-10, 0),
-        cv::Point2f(0, 10),
-        cv::Point2f(0, -10),
-        cv::Point2f(10, 10),
-        cv::Point2f(10, -10),
-        cv::Point2f(-10, 10),
-        cv::Point2f(-10, -10)
-    };
+{   
+    // int eps=5;
+    // std::vector<cv::Point2f> offsets = {
+    //     cv::Point2f(eps, 0),
+    //     cv::Point2f(-eps, 0),
+    //     cv::Point2f(0, eps),
+    //     cv::Point2f(0, -eps),
+    //     cv::Point2f(eps, eps),
+    //     cv::Point2f(eps, -eps),
+    //     cv::Point2f(-eps, eps),
+    //     cv::Point2f(-eps, -eps)
+    // };
     // cout<<mask.type()<<endl;
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    const double proximityThreshold = 8.0; // Adjust as needed
+    const double proximityThreshold =12.0; // Adjust as needed
     
     for (uint i=0; i<Keys_temp.size(); i++)
     {   

@@ -43,6 +43,7 @@ import sys
 import numpy
 import argparse
 import associate
+import math
 
 def align(model,data):
     """Align two trajectories using the method of Horn (closed-form).
@@ -108,7 +109,10 @@ def plot_traj(ax,stamps,traj,style,color,label):
         last= stamps[i]
     if len(x)>0:
         ax.plot(x,y,style,color=color,label=label)
-            
+
+
+def calculate_error(t1, t2):
+    return math.sqrt((t2[0] - t1[0])**2 + (t2[1] - t1[1])**2 + (t2[2] - t1[2])**2)           
 
 if __name__=="__main__":
     # parse command line
@@ -159,7 +163,13 @@ if __name__=="__main__":
         print "absolute_translational_error.min %f m"%numpy.min(trans_error)
         print "absolute_translational_error.max %f m"%numpy.max(trans_error)
     else:
-        print "%f"%numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
+        # print "%f"%numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
+        rmse=numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
+        mean=numpy.mean(trans_error)
+        median=numpy.median(trans_error)
+        std= numpy.std(trans_error)
+        
+        print "%f, %f, %f, %f"%(rmse,mean,median,std)
         
     if args.save_associations:
         file = open(args.save_associations,"w")
@@ -178,7 +188,9 @@ if __name__=="__main__":
         import matplotlib.pylab as pylab
         from matplotlib.patches import Ellipse
         fig = plt.figure()
-        ax = fig.add_subplot(111)
+        fig.set_figwidth(14)
+        fig.set_figheight(6.5)
+        ax = fig.add_subplot(121)
         plot_traj(ax,first_stamps,first_xyz_full.transpose().A,'-',"black","ground truth")
         plot_traj(ax,second_stamps,second_xyz_full_aligned.transpose().A,'-',"blue","estimated")
 
@@ -191,5 +203,29 @@ if __name__=="__main__":
             
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
-        plt.savefig(args.plot,dpi=90)
+        
+        
+        ax1 = fig.add_subplot(122)
+        # plot_traj(ax,first_stamps,first_xyz_full.transpose().A,'-',"black","ground truth")
+        # plot_traj(ax,second_stamps,second_xyz_full_aligned.transpose().A,'-',"blue","estimated")
+
+        label="translation error"
+        err=[]
+        for (a,b),(x1,y1,z1),(x2,y2,z2) in zip(matches,first_xyz.transpose().A,second_xyz_aligned.transpose().A):
+            t1=[x1,y1,z1]
+            t2=[x2,y2,z2]
+            err.append(calculate_error(t1, t2))
+
+
+        
+        ax1.plot(err,color="blue",label=label)
+        label=""    
+        ax1.legend()
+        ax1.set_ylim(0,1.4)  
+        ax1.set_xlim(0,len(err))   
+        ax1.set_xlabel('t [ms]')
+        ax1.set_ylabel('translation error [m]')
+        fig.savefig(args.plot,dpi=90)
+        # plt.savefig(args.plot,dpi=90)
+
         
