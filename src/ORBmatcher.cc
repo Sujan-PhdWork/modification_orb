@@ -1407,7 +1407,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, Frame 
         float u2 = LastFrame.fx*xc2*invzc2+LastFrame.cx;
         float v2 = LastFrame.fy*yc2*invzc2+LastFrame.cy;
 
-        vector<size_t> vIndices2 = LastFrame.GetFeaturesInArea(u2,v2, 10, level1, level1);
+        vector<size_t> vIndices2 = LastFrame.GetFeaturesInArea(u2,v2, 5, level1, level1);
 
         //Add window search in Current Frame for the best VIndices
         if(vIndices2.empty())

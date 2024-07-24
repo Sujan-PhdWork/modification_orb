@@ -34,7 +34,7 @@
 #include"PnPsolver.h"
 
 #include<iostream>
-
+#include<chrono>
 #include<mutex>
 
 
@@ -234,15 +234,18 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     // mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     mCurrentFrame = Frame(mImGray,imDepth,mSegImg,mImRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     // if (cv::countNonZero(mSegImg)>10)
+    auto start = std::chrono::high_resolution_clock::now();
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
     // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
     // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
     }
+    auto end = std::chrono::high_resolution_clock::now();
     
+    std::chrono::duration<double, std::milli> duration = end - start;
     
-    
+    cout<<duration.count()<<"ms"<<endl;
 
     Track();
     return mCurrentFrame.mTcw.clone();
@@ -944,7 +947,7 @@ bool Tracking::TrackGeometry()
                 if (!(mLastFrame.mvpMapPoints[idxs.first]))
                     continue; 
                 MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                if (d>3.84)
+                if (d>10)
                 {   
                     reject1++; 
                     double w=1/(d*d*d);
@@ -952,6 +955,7 @@ bool Tracking::TrackGeometry()
                     // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
                     // pMP->mbTrackInView = false;
                 }
+                
 
             }
             if (idxs.second>0)

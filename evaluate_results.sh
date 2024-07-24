@@ -28,7 +28,7 @@ do
     file_number=$(basename $result_file .txt)
     
     # Run the python command and capture the output
-    output=$(python2.7 evaluate_ate.py ../dataset/rgbd_dataset_freiburg3_walking_xyz/groundtruth.txt $result_file)
+    output=$(python2.7 evaluate_ate.py ../dataset/TUM/rgbd_dataset_freiburg3_sitting_static/groundtruth.txt $result_file)
     
     # Extract values from the output
     rmse=$(echo $output | cut -d',' -f1 | xargs) # rmse value
