@@ -234,18 +234,18 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     // mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     mCurrentFrame = Frame(mImGray,imDepth,mSegImg,mImRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     // if (cv::countNonZero(mSegImg)>10)
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
     // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
     // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
     }
-    auto end = std::chrono::high_resolution_clock::now();
+    // auto end = std::chrono::high_resolution_clock::now();
     
-    std::chrono::duration<double, std::milli> duration = end - start;
+    // std::chrono::duration<double, std::milli> duration = end - start;
     
-    cout<<duration.count()<<"ms"<<endl;
+    // cout<<duration.count()<<"ms"<<endl;
 
     Track();
     return mCurrentFrame.mTcw.clone();
@@ -924,7 +924,10 @@ bool Tracking::TrackGeometry()
             cv::KeyPoint kp3=mSeLastFrame.mvKeys[i];
 
             if (idxs.first==-1)
+            {
                 continue;
+            }
+                // 
             cv::KeyPoint kp2= mLastFrame.mvKeys[idxs.first];
 
             if (idxs.second==-1)
@@ -941,19 +944,22 @@ bool Tracking::TrackGeometry()
                 if(den==0)
                     continue;
                 
-                const double d = num*num/den;
+                const double d = sqrt(num*num/den);
                 
 
                 if (!(mLastFrame.mvpMapPoints[idxs.first]))
                     continue; 
-                MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                if (d>10)
+                
+                // cout<<d<<endl;
+                if (d<0.01)
                 {   
                     reject1++; 
-                    double w=1/(d*d*d);
-                    pMP->SetWeight(w);
+                    // double w=1/(d*d*d);
+                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    pMP->SetWeight(5.0f);
                     // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
                     // pMP->mbTrackInView = false;
+                    continue;
                 }
                 
 
@@ -1041,7 +1047,7 @@ bool Tracking::TrackGeometry()
                 {   
                     add2++;                
                     MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    pMP->SetWeight(3.0f);
+                    pMP->SetWeight(6.0f);
                     // cv::circle(vizimg,kp1.pt,5,cv::Scalar(255,0,0),-1);
                     // pMP->mnLastFrameSeen = mCurrentFrame.mnId;
                     // pMP->mbTrackInView = false;

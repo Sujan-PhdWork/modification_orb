@@ -52,7 +52,7 @@ public:
     int Observations();
 
 
-    void SetWeight(float weight);
+    void SetWeight(double weight);
     float GetWeight();
     void AddObservation(KeyFrame* pKF,size_t idx);
     void EraseObservation(KeyFrame* pKF);

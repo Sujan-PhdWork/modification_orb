@@ -364,8 +364,24 @@ if __name__ == '__main__':
         print "rotational_error.min %f deg"%(numpy.min(rot_error) * 180.0 / numpy.pi)
         print "rotational_error.max %f deg"%(numpy.max(rot_error) * 180.0 / numpy.pi)
     else:
-        print numpy.mean(trans_error)
-
+        t_RMSE=numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
+        t_MEAN=numpy.mean(trans_error)
+        t_MEDIAN=numpy.median(trans_error)
+        t_SD=numpy.std(trans_error)
+        t_MIN=numpy.min(trans_error)
+        t_MAX=numpy.max(trans_error)
+        #print("Translation")
+        #print("RMSE MEAN MEDIAN SD MIN MAX")
+        #print "%f,%f,%f,%f,%f,%f"%(t_RMSE, t_MEAN, t_MEDIAN, t_SD, t_MIN, t_MAX)
+        R_RMSE=(numpy.sqrt(numpy.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / numpy.pi)
+        R_MEAN =(numpy.mean(rot_error) * 180.0 / numpy.pi)
+        R_MEDIAN=(numpy.median(rot_error) * 180.0 / numpy.pi)
+        R_SD=(numpy.std(rot_error) * 180.0 / numpy.pi)
+        R_MIN=(numpy.min(rot_error) * 180.0 / numpy.pi)
+        R_MAX=(numpy.max(rot_error) * 180.0 / numpy.pi)
+        #print("Rotation")
+        #print("RMSE MEAN MEDIAN SD MIN MAX")
+        print "%f,%f,%f,%f"%(t_RMSE, t_SD, R_RMSE, R_SD)
     if args.plot:    
         import matplotlib
         matplotlib.use('Agg')

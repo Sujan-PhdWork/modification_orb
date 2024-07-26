@@ -95,7 +95,7 @@ KeyFrame* MapPoint::GetReferenceKeyFrame()
     return mpRefKF;
 }
 
-void MapPoint::SetWeight(float weight)
+void MapPoint::SetWeight(double weight)
 {
     unique_lock<mutex> lock(mMutexWeight);
     // unique_lock<mutex> lock3(mMutexFeatures);

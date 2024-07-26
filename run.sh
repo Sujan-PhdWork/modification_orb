@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the number of iterations
-NUM_ITERATIONS=5
+NUM_ITERATIONS=10
 
 # Define the result directory
 RESULT_DIR="result"
