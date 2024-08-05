@@ -118,9 +118,9 @@ cv::Mat FrameDrawer::DrawFrame(cv::Mat &segImg)
                         cv::rectangle(im,pt1,pt2,color);
                         cv::circle(im,vCurrentKeys[i].pt,rad,color,-1);
                         }
-                    else if (mWeight[i]<0.8)
+                    else if (mWeight[i]<1)
                         {
-                        rad=1;
+                        rad=2;
                         color=cv::Scalar(0,0,255);
                         // cv::rectangle(im,pt1,pt2,color);
                         cv::circle(im,vCurrentKeys[i].pt,rad,color,-1);

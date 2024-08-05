@@ -156,7 +156,8 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
     // {
     //     cv::circle(vizimg,mvKeys[i].pt,3,cv::Scalar(0,255,0),-1);
     // }
-    // cv::imshow("Hello",vizimg);
+    // cv::imshow("Hello",mSegGray);
+    // cv::imshow("Hello1",imGray);
     // cv::imshow("Hello2", SegImg);
     // // cv::imshow("Hello2",vizimg2);
     // cv::waitKey(1);

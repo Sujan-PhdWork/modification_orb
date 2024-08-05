@@ -66,10 +66,11 @@ PointCloud::Ptr MapREG::image2PointCloud(KeyFrame* kF)
         // cout<<value<<endl;           
         if (sI == 0)
             continue;
-        if (d ==0)
+        double z =double(d)/5000.0;
+        if (z <0.01 || z>8)
             continue;
         PointT p;
-        p.z =double(d)/5000.0;
+        p.z =z;
         p.x = (n - cx) * p.z / fx;
         p.y = (m - cy) * p.z / fy;
         

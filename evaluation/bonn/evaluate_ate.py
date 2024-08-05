@@ -224,7 +224,7 @@ if __name__=="__main__":
         ax1.set_ylim(0,1.4)  
         ax1.set_xlim(0,len(err))   
         ax1.set_xlabel('t [ms]',fontsize=12)
-        ax1.set_ylabel('error [m]',fontsize=12)
+        ax1.set_ylabel('Translation error [m]',fontsize=12)
         fig.savefig(args.plot,dpi=90)
         
         # plt.savefig(args.plot,dpi=90)
