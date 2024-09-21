@@ -15,7 +15,7 @@ rm -rf $RESULT_DIR/*
 for ((i=1; i<=NUM_ITERATIONS; i++))
 do
     # Run the command
-    ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/RGB-D/TUM3.yaml ../dataset/TUM/rgbd_dataset_freiburg3_sitting_static/ Examples/RGB-D/associations/fr3_sitting_static.txt
+    ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/RGB-D/TUM3.yaml ../dataset/TUM/rgbd_dataset_freiburg3_walking_xyz/ Examples/RGB-D/associations/fr3_walking_xyz.txt
     
     # Copy and rename the CameraTrajectory.txt file
     cp CameraTrajectory.txt $RESULT_DIR/${i}.txt

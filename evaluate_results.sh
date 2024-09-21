@@ -69,3 +69,9 @@ echo "Mean Mean: $mean_mean"
 echo "Mean Median: $mean_median"
 echo "Mean Std: $mean_std"
 
+rm $TMP_RMSE
+rm $TMP_MEAN
+rm $TMP_MEDIAN
+rm $TMP_STD
+
+

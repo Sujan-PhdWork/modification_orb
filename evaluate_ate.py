@@ -206,8 +206,8 @@ if __name__=="__main__":
         
         
         ax1 = fig.add_subplot(122)
-        # plot_traj(ax,first_stamps,first_xyz_full.transpose().A,'-',"black","ground truth")
-        # plot_traj(ax,second_stamps,second_xyz_full_aligned.transpose().A,'-',"blue","estimated")
+        plot_traj(ax,first_stamps,first_xyz_full.transpose().A,'-',"black","ground truth")
+        plot_traj(ax,second_stamps,second_xyz_full_aligned.transpose().A,'-',"blue","estimated")
 
         label="translation error"
         err=[]

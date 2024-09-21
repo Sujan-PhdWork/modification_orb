@@ -1004,7 +1004,7 @@ bool Tracking::TrackGeometry()
                     continue; 
                 
                 // cout<<d<<endl;
-                if (d<0.03)
+                if (d<0.1)
                 {   
                     reject1++; 
                     // double w=1/(d*d*d);
