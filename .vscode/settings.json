@@ -65,6 +65,13 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "numericaldiff": "cpp"
-    }
+        "numericaldiff": "cpp",
+        "csignal": "cpp",
+        "hash_map": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp"
+    },
+    "ros.distro": "noetic"
 }

@@ -30,10 +30,10 @@ endif()
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 
-find_package(PCL 1.13 REQUIRED)
+#find_package(PCL 1.13 REQUIRED)
 # list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
 
-add_definitions( ${PCL_DEFINITIONS} )
+#add_definitions( ${PCL_DEFINITIONS} )
 
 find_package(OpenCV 3.0 QUIET)
 if(NOT OpenCV_FOUND)
@@ -79,7 +79,7 @@ src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
 src/Segmentation.cc
-src/MapREG.cc
+# src/MapREG.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -89,7 +89,7 @@ ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 pybind11::embed
-${PCL_LIBRARIES}
+#${PCL_LIBRARIES}
 )
 
 # Build examples

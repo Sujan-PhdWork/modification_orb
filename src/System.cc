@@ -23,8 +23,9 @@
 #include "System.h"
 #include "Converter.h"
 #include <thread>
-#include <pangolin/pangolin.h>
+//#include <pangolin/pangolin.h>
 #include <iomanip>
+#include<chrono>
 
 namespace ORB_SLAM2
 {
@@ -212,11 +213,17 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     
     
     cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
+    // auto start = std::chrono::high_resolution_clock::now();
     if (!im.empty())
     {
     cv::Mat result=mSegmentation->result(im);
     result.copyTo(segImg);
     }
+    // auto end = std::chrono::high_resolution_clock::now();
+    
+    // std::chrono::duration<double, std::milli> duration = end - start;
+    
+    // cout<<duration.count()<<":ms"<<endl;
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,segImg,timestamp);
 
     unique_lock<mutex> lock2(mMutexState);
@@ -428,44 +435,44 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     cout << endl << "trajectory saved!" << endl;
 }
 
-void System::SavePCD()
-{
-    cout << endl << "Saving point cloud "  " ..." << endl;
+// void System::SavePCD()
+// {
+//     cout << endl << "Saving point cloud "  " ..." << endl;
 
-    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
-    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+//     vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
+//     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
-    // Transform all keyframes so that the first keyframe is at the origin.
-    // After a loop closure the first keyframe might not be at the origin.
-    //cv::Mat Two = vpKFs[0]->GetPoseInverse();
-
-
-    mpMapREG = new MapREG();
-
-    for(size_t i=0; i<vpKFs.size(); i++)
-    {
-        KeyFrame* pKF = vpKFs[i];
-
-       // pKF->SetPose(pKF->GetPose()*Two);
-
-        if(pKF->isBad())
-            continue;
-
-        mpMapREG->REGISTER_PointCloud(pKF);
+//     // Transform all keyframes so that the first keyframe is at the origin.
+//     // After a loop closure the first keyframe might not be at the origin.
+//     //cv::Mat Two = vpKFs[0]->GetPoseInverse();
 
 
-        // cv::Mat R = pKF->GetRotation().t();
-        // vector<float> q = Converter::toQuaternion(R);
-        // cv::Mat t = pKF->GetCameraCenter();
-        // f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2)
-        //   << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+//     mpMapREG = new MapREG();
 
-    }
-    mpMapREG->PCD_VIEW();
-    PointCloud::Ptr output= mpMapREG->output;
-    pcl::io::savePCDFile ("Keyframe.pcd", *output ,true);
-    cout << endl << "PCD saved!" << endl;
-}
+//     for(size_t i=0; i<vpKFs.size(); i++)
+//     {
+//         KeyFrame* pKF = vpKFs[i];
+
+//        // pKF->SetPose(pKF->GetPose()*Two);
+
+//         if(pKF->isBad())
+//             continue;
+
+//         mpMapREG->REGISTER_PointCloud(pKF);
+
+
+//         // cv::Mat R = pKF->GetRotation().t();
+//         // vector<float> q = Converter::toQuaternion(R);
+//         // cv::Mat t = pKF->GetCameraCenter();
+//         // f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2)
+//         //   << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+
+//     }
+//     mpMapREG->PCD_VIEW();
+//     PointCloud::Ptr output= mpMapREG->output;
+//     pcl::io::savePCDFile ("Keyframe.pcd", *output ,true);
+//     cout << endl << "PCD saved!" << endl;
+// }
 
 
 
