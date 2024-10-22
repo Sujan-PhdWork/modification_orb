@@ -30,12 +30,12 @@
 #include <pybind11/embed.h>
 #include <pybind11/numpy.h>
 
-#include <pcl/memory.h>  // for pcl::make_shared
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_representation.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/common/transforms.h>
+// #include <pcl/memory.h>  // for pcl::make_shared
+// #include <pcl/point_types.h>
+// #include <pcl/point_cloud.h>
+// #include <pcl/point_representation.h>
+// #include <pcl/io/pcd_io.h>
+// #include <pcl/common/transforms.h>
 
 
 
@@ -51,12 +51,12 @@
 #include "KeyFrameDatabase.h"
 #include "ORBVocabulary.h"
 #include "Viewer.h"
-#include "MapREG.h"
+// #include "MapREG.h"
 
 
 
-typedef pcl::PointXYZRGBA PointT;
-typedef pcl::PointCloud<PointT> PointCloud;
+// typedef pcl::PointXYZRGBA PointT;
+// typedef pcl::PointCloud<PointT> PointCloud;
 
 namespace ORB_SLAM2
 {
@@ -67,7 +67,7 @@ class Map;
 class Tracking;
 class LocalMapping;
 class LoopClosing;
-class MapREG;
+// class MapREG;
 
 class System
 {
@@ -132,7 +132,7 @@ public:
     // Save Point cloud in the .pcd format.
     // This method works for RGB-D sensor input.
     // Call first Shutdown()
-    void SavePCD();
+    // void SavePCD();
 
     // Save camera trajectory in the KITTI dataset format.
     // Only for stereo and RGB-D. This method does not work for monocular.
@@ -186,7 +186,7 @@ private:
 
     // 3d registration of point cloud
 
-    MapREG* mpMapREG;
+    // MapREG* mpMapREG;
     // System threads: Local Mapping, Loop Closing, Viewer.
     // The Tracking thread "lives" in the main execution thread that creates the System object.
     std::thread* mptLocalMapping;

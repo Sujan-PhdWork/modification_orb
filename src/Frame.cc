@@ -22,6 +22,7 @@
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include <thread>
+#include<chrono>
 
 namespace ORB_SLAM2
 {
@@ -147,7 +148,13 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
 
     // ORB extraction
+    auto start = std::chrono::high_resolution_clock::now();
     ExtractORB(0,imGray,SegImg);
+    auto end = std::chrono::high_resolution_clock::now();
+    
+    std::chrono::duration<double, std::milli> duration = end - start;
+    
+    cout<<duration.count()<<":ms"<<endl;
     
     // cv::Mat vizimg= cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
     // imGray.copyTo(vizimg);
@@ -278,8 +285,15 @@ void Frame::ExtractORB(int flag, const cv::Mat &im, const cv::Mat &mask)
     {   
         vector<cv::KeyPoint> mvKeys_temp;
         cv::Mat mDescriptors_temp;
+        
         (*mpORBextractorLeft)(im,mask,mvKeys_temp,mDescriptors_temp);
         checkNeighbour(mvKeys_temp,mDescriptors_temp,mvKeys,mDescriptors,mask);
+        // auto end = std::chrono::high_resolution_clock::now();
+    
+        // std::chrono::duration<double, std::milli> duration = end - start;
+    
+        // cout<<duration.count()<<":ms"<<endl;
+
     }
 
     //Check its neighbour is inside the mask

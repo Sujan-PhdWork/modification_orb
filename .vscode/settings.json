@@ -66,9 +66,20 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "numericaldiff": "cpp",
+<<<<<<< HEAD
         "strstream": "cpp",
         "codecvt": "cpp",
         "source_location": "cpp",
         "cfenv": "cpp"
     }
+=======
+        "csignal": "cpp",
+        "hash_map": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp"
+    },
+    "ros.distro": "noetic"
+>>>>>>> ab9f592d6f69e4c5a51cab2e72c0dc0443a75296
 }
