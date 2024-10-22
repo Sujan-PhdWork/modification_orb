@@ -237,9 +237,9 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     // auto start = std::chrono::high_resolution_clock::now();
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
-    // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
+    // // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
-    // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
+    // // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
     }
     // auto end = std::chrono::high_resolution_clock::now();
     
@@ -1008,8 +1008,8 @@ bool Tracking::TrackGeometry()
                 {   
                     reject1++; 
                     // double w=1/(d*d*d);
-                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    pMP->SetWeight(2.0f);
+                    // MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    // pMP->SetWeight(2.0f);
                     // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
                     // pMP->mbTrackInView = false;
                     continue;

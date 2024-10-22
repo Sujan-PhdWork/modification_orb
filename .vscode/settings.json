@@ -65,6 +65,10 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "numericaldiff": "cpp"
+        "numericaldiff": "cpp",
+        "strstream": "cpp",
+        "codecvt": "cpp",
+        "source_location": "cpp",
+        "cfenv": "cpp"
     }
 }

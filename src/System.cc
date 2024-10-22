@@ -211,12 +211,12 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     }
     
     
-    cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
-    if (!im.empty())
-    {
-    cv::Mat result=mSegmentation->result(im);
-    result.copyTo(segImg);
-    }
+    cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(255,255,255));
+    // if (!im.empty())
+    // {
+    // cv::Mat result=mSegmentation->result(im);
+    // result.copyTo(segImg);
+    // }
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,segImg,timestamp);
 
     unique_lock<mutex> lock2(mMutexState);

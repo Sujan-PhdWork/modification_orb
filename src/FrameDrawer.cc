@@ -107,22 +107,22 @@ cv::Mat FrameDrawer::DrawFrame(cv::Mat &segImg)
                 pt2.y=vCurrentKeys[i].pt.y+r;
 
                 // This is a match to a MapPoint in the map
-                cv::Scalar color(0,255,0);
+                cv::Scalar color(0,0,255);
                 int rad=2;
                 if(vbMap[i])
                 {
-                    if (mWeight[i]>1)
+                    if (mWeight[i]==3)
                         {
                         rad=5;
                         color=cv::Scalar(255,0,0);
                         cv::rectangle(im,pt1,pt2,color);
                         cv::circle(im,vCurrentKeys[i].pt,rad,color,-1);
                         }
-                    else if (mWeight[i]<1)
+                    else if (mWeight[i]==2)
                         {
-                        rad=2;
-                        color=cv::Scalar(0,0,255);
-                        // cv::rectangle(im,pt1,pt2,color);
+                        rad=5;
+                        color=cv::Scalar(0,255,255);
+                        cv::rectangle(im,pt1,pt2,color);
                         cv::circle(im,vCurrentKeys[i].pt,rad,color,-1);
                         }
                     else
