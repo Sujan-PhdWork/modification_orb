@@ -1007,10 +1007,10 @@ bool Tracking::TrackGeometry()
                 if (d<0.1)
                 {   
                     reject1++; 
-                    double w=1/(d*d*d);
-                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    pMP->SetWeight(2.0f);
-                    // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                    // double w=1/(d*d*d);
+                    // MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    // pMP->SetWeight(2.0f);
+                    // // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
                     // pMP->mbTrackInView = false;
                     continue;
                 }

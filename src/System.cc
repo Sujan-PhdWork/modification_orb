@@ -212,13 +212,13 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     }
     
     
-    cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
+    cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(255,255,255));
     // auto start = std::chrono::high_resolution_clock::now();
-    if (!im.empty())
-    {
-    cv::Mat result=mSegmentation->result(im);
-    result.copyTo(segImg);
-    }
+    // if (!im.empty())
+    // {
+    // cv::Mat result=mSegmentation->result(im);
+    // result.copyTo(segImg);
+    // }
     // auto end = std::chrono::high_resolution_clock::now();
     
     // std::chrono::duration<double, std::milli> duration = end - start;
