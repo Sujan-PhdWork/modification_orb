@@ -212,14 +212,6 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     }
     
     
-<<<<<<< HEAD
-    cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(255,255,255));
-    // if (!im.empty())
-    // {
-    // cv::Mat result=mSegmentation->result(im);
-    // result.copyTo(segImg);
-    // }
-=======
     cv::Mat segImg=cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
     // auto start = std::chrono::high_resolution_clock::now();
     if (!im.empty())
@@ -232,7 +224,6 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     // std::chrono::duration<double, std::milli> duration = end - start;
     
     // cout<<duration.count()<<":ms"<<endl;
->>>>>>> ab9f592d6f69e4c5a51cab2e72c0dc0443a75296
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,segImg,timestamp);
 
     unique_lock<mutex> lock2(mMutexState);
