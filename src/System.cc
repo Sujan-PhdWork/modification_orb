@@ -226,7 +226,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     cv::Mat result=mSegmentation->result(im);
     result.copyTo(segImg);
     }
-    //uto end = std::chrono::high_resolution_clock::now();
+    // auto end = std::chrono::high_resolution_clock::now();
     
     // std::chrono::duration<double, std::milli> duration = end - start;
     
