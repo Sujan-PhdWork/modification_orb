@@ -13,6 +13,10 @@ def segment(frame):
         exit()
     original_W=frame.shape[1]
     original_H=frame.shape[0]
+    if frame.shape[2]==1:
+        frame=cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+    # if frame.shape
     frame=frame.astype(np.uint8)
     # lable_image=np.zeros([original_H,original_W],dtype=np.uint8)
     lable_image1=frame_mask(frame)
@@ -30,8 +34,7 @@ def segment(frame):
 def frame_mask(frame):
     original_W=frame.shape[1]
     original_H=frame.shape[0]
-    
-    results = model(frame,verbose=False,seed=999)
+    results = model(frame,verbose=False)
     result=results[0].to("cpu")
     if result.masks is None:
         return np.ones((original_H,original_W),dtype=np.uint8)*255
@@ -46,13 +49,23 @@ def frame_mask(frame):
     for i in range(len(conf)):
         if cls[i]>9:
             continue
-        if conf[i]<0.5:
+        if conf[i]<0.6:
             continue
+        resize_mask = cv2.resize(total_mask[i], ( original_W,  original_H), 
+               interpolation = cv2.INTER_LINEAR)
 
-        lable_image=cv2.bitwise_or(lable_image,total_mask[i])
+        lable_image=cv2.bitwise_or(lable_image,resize_mask)
 
     return lable_image
 
+
+# image_rgb=cv2.imread("000000.png")
+# # image_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB) 
+# # image_rgb=cv2.imread("demo.png")
+# mask_image=segment(image_rgb)
+# cv2.imshow('Webcam Video', mask_image)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
 
 
