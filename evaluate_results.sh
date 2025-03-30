@@ -52,11 +52,21 @@ do
     echo $std >> $TMP_STD
 done
 
+
+compute_median() {
+    sort -n $1 | awk '{ a[i++]=$1; } END { if (i % 2) { print a[int(i/2)]; } else { print (a[int(i/2)-1] + a[int(i/2)]) / 2; } }'
+}
+
+median_rmse=$(compute_median $TMP_RMSE)
+median_mean=$(compute_median $TMP_MEAN)
+median_median=$(compute_median $TMP_MEDIAN)
+median_std=$(compute_median $TMP_STD)
+
 # Compute the mean of rmse, mean, median, and std
-mean_rmse=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_RMSE)
-mean_mean=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_MEAN)
-mean_median=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_MEDIAN)
-mean_std=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_STD)
+#mean_rmse=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_RMSE)
+#mean_mean=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_MEAN)
+#mean_median=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_MEDIAN)
+#mean_std=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_STD)
 
 # Append the averages to the evaluation results file
 #echo -e "\nMean RMSE: $mean_rmse" >> $EVALUATION_RESULTS
@@ -64,10 +74,11 @@ mean_std=$(awk '{sum+=$1} END {if (NR>0) print sum / NR}' $TMP_STD)
 #echo "Mean Median: $mean_median" >> $EVALUATION_RESULTS
 #echo "Mean Std: $mean_std" >> $EVALUATION_RESULTS
 
-echo -e "\nMean RMSE: $mean_rmse" 
-echo "Mean Mean: $mean_mean" 
-echo "Mean Median: $mean_median"
-echo "Mean Std: $mean_std"
+echo -e "\nMedian RMSE: $median_rmse"
+echo "Median Mean: $median_mean"
+echo "Median Median: $median_median"
+echo "Median Std: $median_std"
+
 
 rm $TMP_RMSE
 rm $TMP_MEAN

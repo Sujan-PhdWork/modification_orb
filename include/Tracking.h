@@ -137,6 +137,7 @@ protected:
     void UpdateLastFrame();
     bool TrackWithMotionModel();
     bool TrackGeometry();
+    bool TrackGeometryV1();
 
     bool Relocalization();
 

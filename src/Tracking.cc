@@ -200,6 +200,12 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
 
     mCurrentFrame = Frame(mImGray,imGrayRight,mSegImg,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
+    {
+        unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+        // // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
+        temp_track();
+        // // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
+    }
     Track();
 
     return mCurrentFrame.mTcw.clone();
@@ -294,7 +300,7 @@ void Tracking::temp_track()
 
         if (mCurrentFrame.mnId>3)
         {
-            bOK=TrackGeometry();  
+            bOK=TrackGeometryV1();  
         }
         
         // cout<<"current frame "<<mCurrentFrame.mnId<<endl;
@@ -869,7 +875,7 @@ cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
             }
             
             double len=norm(p2[i]-p1[i]);
-            if (len>10)
+            if (len>30)
                 continue;
 
             good_new1.push_back(p2[i]);
@@ -1150,6 +1156,103 @@ bool Tracking::TrackGeometry()
     
 }
 
+bool Tracking::TrackGeometryV1()
+{   
+
+    // cv::Mat vizimg;
+    // cv::cvtColor(mCurrentFrame.mGray, vizimg, cv::COLOR_GRAY2BGR);
+    ORBmatcher matcher(0.9,true);
+    vector<std::pair<int,int>> vmatches321; 
+    int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,mSeLastFrame,vmatches321);
+    // cout<<"Matches: "<<nmatches<<endl;
+    
+
+    
+    cv::Mat F32 =computeFundamentalMat(mSeLastFrame,mLastFrame);
+    cv::Mat F31 =computeFundamentalMat(mSeLastFrame,mCurrentFrame);
+    cv::Mat F21 =computeFundamentalMat(mLastFrame,mCurrentFrame);
+
+    
+
+
+
+    vector<double> data;
+    
+    int reject1=0;
+    int add2=0;
+    cv::Mat epi_line31,epi_line21;
+    cv::Mat kp3_h,kp2_h,kp1_h;
+
+   
+    if (F31.empty()||F32.empty()||F21.empty())
+    {   
+        
+        return false;
+    
+    }
+
+    
+
+    
+
+
+
+    for (size_t i=0, iend=mSeLastFrame.mvKeys.size();i<iend; i++)
+    {   
+        
+        pair<int,int> idxs=vmatches321[i];
+        if (mSeLastFrame.mvpMapPoints[i])
+        {
+
+            pair<int,int> idxs=vmatches321[i];
+            cv::KeyPoint kp3=mSeLastFrame.mvKeys[i];
+
+            if (idxs.first==-1)
+            {
+                continue;
+            }
+               
+            cv::KeyPoint kp2= mLastFrame.mvKeys[idxs.first];
+           
+                const double a = kp2.pt.x*F32.at<double>(0,0)+kp2.pt.y*F32.at<double>(1,0)+F32.at<double>(2,0);
+                const double b = kp2.pt.x*F32.at<double>(0,1)+kp2.pt.y*F32.at<double>(1,1)+F32.at<double>(2,1);
+                const double c = kp2.pt.x*F32.at<double>(0,2)+kp2.pt.y*F32.at<double>(1,2)+F32.at<double>(2,2);
+
+                const double num = a*kp3.pt.x+b*kp3.pt.y+c;
+
+                const double den = a*a+b*b;
+
+                if(den==0)
+                    continue;
+                
+                const double d = sqrt(num*num/den);
+                
+
+                if (!(mLastFrame.mvpMapPoints[idxs.first]))
+                    continue; 
+                
+                // cout<<d<<endl;
+                if (d<0.1)
+                {   
+                    reject1++; 
+                    // double w=1/(d*d*d);
+                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    pMP->SetWeight(2.0f);
+                    // // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
+                    // pMP->mbTrackInView = false;
+                    continue;
+                }
+                
+
+            
+        }
+    
+    }
+    
+
+    return true; 
+    
+}
 
 
 
