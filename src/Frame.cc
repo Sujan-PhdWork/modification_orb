@@ -148,13 +148,13 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &SegIm
     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
 
     // ORB extraction
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     ExtractORB(0,imGray,SegImg);
-    auto end = std::chrono::high_resolution_clock::now();
+    // auto end = std::chrono::high_resolution_clock::now();
     
-    std::chrono::duration<double, std::milli> duration = end - start;
+    // std::chrono::duration<double, std::milli> duration = end - start;
     
-    cout<<duration.count()<<":ms"<<endl;
+    // cout<<duration.count()<<":ms"<<endl;
     
     // cv::Mat vizimg= cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
     // imGray.copyTo(vizimg);

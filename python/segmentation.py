@@ -23,7 +23,7 @@ def segment(frame):
     lable_image2=frame_mask(frame)
     lable_image=cv2.bitwise_or(lable_image1,lable_image2)
 
-    kernel = np.ones((11,11), np.uint8) 
+    kernel = np.ones((13,13), np.uint8) 
     
     lable_image=lable_image*255
     img_dialation = cv2.dilate(lable_image, kernel, iterations=1) 

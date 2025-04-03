@@ -211,22 +211,24 @@ if __name__=="__main__":
 
         label="translation error"
         err=[]
+        time_s=[]
         for (a,b),(x1,y1,z1),(x2,y2,z2) in zip(matches,first_xyz.transpose().A,second_xyz_aligned.transpose().A):
             t1=[x1,y1,z1]
             t2=[x2,y2,z2]
             err.append(calculate_error(t1, t2))
+            time_s.append(b)
 
 
         
-        ax1.plot(err,color="blue",label=label)
+        time_s= numpy.array(time_s)
+        time_s=time_s-time_s[0]
+        ax1.plot(time_s,err,color="blue",label=label)
         label=""    
         ax1.legend()
-        ax1.set_ylim(0,1.4)  
-        ax1.set_xlim(0,len(err))   
-        ax1.set_xlabel('t [ms]',fontsize=12)
+        # ax1.set_ylim(0,1.4)  
+        # ax1.set_xlim(0,time_s[-1])   
+        ax1.set_xlabel('t [s]',fontsize=12)
         ax1.set_ylabel('error [m]',fontsize=12)
         fig.savefig(args.plot,dpi=90)
-        
-        # plt.savefig(args.plot,dpi=90)
 
         

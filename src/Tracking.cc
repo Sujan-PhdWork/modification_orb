@@ -241,18 +241,18 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, cv::Mat
     // mCurrentFrame = Frame(mImGray,imDepth,mSegImg,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     mCurrentFrame = Frame(mImGray,imDepth,mSegImg,mImRGB,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     // if (cv::countNonZero(mSegImg)>10)
-    // auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     {
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
     // // cout<<"Before: "<<mpMap->MapPointsInMap()<<endl;
     temp_track();
     // // cout<<"After: "<<mpMap->MapPointsInMap()<<endl;
     }
-    // auto end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     
-    // std::chrono::duration<double, std::milli> duration = end - start;
+    std::chrono::duration<double, std::milli> duration = end - start;
     
-    // cout<<duration.count()<<"ms"<<endl;
+    cout<<duration.count()<<"ms"<<endl;
 
     Track();
     return mCurrentFrame.mTcw.clone();
@@ -300,7 +300,7 @@ void Tracking::temp_track()
 
         if (mCurrentFrame.mnId>3)
         {
-            bOK=TrackGeometryV1();  
+            bOK=TrackGeometry();  
         }
         
         // cout<<"current frame "<<mCurrentFrame.mnId<<endl;
@@ -844,7 +844,7 @@ cv::Mat Tracking::compute_epipole(cv::Mat F)
 
 }
 
-cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
+cv::Mat Tracking::computeFundamentalMat2(Frame F2, Frame F1 )
 {
     vector<uchar> status;
     vector<float> err;
@@ -908,6 +908,71 @@ cv::Mat Tracking::computeFundamentalMat(Frame F2, Frame F1 )
 
 }
 
+void Tracking::computeFundamentalMat(Frame &F2, Frame &F1, cv::Mat &F )
+{
+    vector<uchar> status;
+    vector<float> err;
+    cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
+
+
+    vector<cv::Point2f> p2, p1;
+    
+    for (uint i=0;i<F2.mvKeys.size();i++)
+        {
+            // cout<<mSeLastFrame.mvKeys[i].pt.x<<endl;
+            p2.push_back(F2.mvKeys[i].pt);
+        }    
+    cv::calcOpticalFlowPyrLK(F2.mGray, F1.mGray, p2, p1, status, err, cv::Size(15,15), 2, criteria);
+
+    
+    vector<cv::Point2f> good_new1, good_new2;
+
+    for(uint i = 0; i < p2.size(); i++)
+    {
+        if(status[i] == 1) 
+        {   
+            
+            int value = (int)F1.mSegGray.at<uchar>(p1[i]);
+            if (value==0)
+            {   
+                continue;
+            }
+            
+            double len=norm(p2[i]-p1[i]);
+            if (len>30)
+                continue;
+
+            good_new1.push_back(p2[i]);
+            good_new2.push_back(p1[i]);
+        }
+    }
+
+
+    cv::Mat F21;
+    try
+    {    // Note: good_new2'*F*good_new1=0
+        cv::Mat F21=cv::findFundamentalMat(good_new1,good_new2,cv::FM_RANSAC,1,0.99);
+        if (F21.rows>3)
+        {
+            F=cv::Mat();
+            return;
+        }
+        
+        F =F21.clone();
+    }
+
+     catch(const cv::Exception& e)
+    {
+        // std::cerr <<"Opencv error: "<< e.what() << endl;
+    }
+    catch(const std::exception& e)
+    {
+        // std::cerr <<"Standard error: "<< e.what() << endl;;
+    }
+    
+
+
+}
 
 bool Tracking::TrackGeometry()
 {   
@@ -921,10 +986,17 @@ bool Tracking::TrackGeometry()
     
 
     
-    cv::Mat F32 =computeFundamentalMat(mSeLastFrame,mLastFrame);
-    cv::Mat F31 =computeFundamentalMat(mSeLastFrame,mCurrentFrame);
-    cv::Mat F21 =computeFundamentalMat(mLastFrame,mCurrentFrame);
-
+    // cv::Mat F32 =computeFundamentalMat(mSeLastFrame,mLastFrame);
+    // cv::Mat F31 =computeFundamentalMat(mSeLastFrame,mCurrentFrame);
+    // cv::Mat F21 =computeFundamentalMat(mLastFrame,mCurrentFrame);
+    cv::Mat F32,F31,F21;
+    thread threadF32 (&Tracking::computeFundamentalMat,this,ref(mSeLastFrame),ref(mLastFrame),ref(F32));
+    thread threadF31 (&Tracking::computeFundamentalMat,this,ref(mSeLastFrame),ref(mCurrentFrame),ref(F31));
+    thread threadF21 (&Tracking::computeFundamentalMat,this,ref(mLastFrame),ref(mCurrentFrame),ref(F21));
+    
+    threadF32.join();
+    threadF31.join();
+    threadF21.join();
     
 
 
@@ -1015,8 +1087,8 @@ bool Tracking::TrackGeometry()
                 {   
                     reject1++; 
                     // double w=1/(d*d*d);
-                    // MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
-                    // pMP->SetWeight(2.0f);
+                    MapPoint* pMP = mSeLastFrame.mvpMapPoints[i];
+                    pMP->SetWeight(2.0f);
                     // // pMP->mnLastFrameSeen = mSeLastFrame.mnId;
                     // pMP->mbTrackInView = false;
                     continue;
@@ -1168,13 +1240,10 @@ bool Tracking::TrackGeometryV1()
     
 
     
-    cv::Mat F32 =computeFundamentalMat(mSeLastFrame,mLastFrame);
-    cv::Mat F31 =computeFundamentalMat(mSeLastFrame,mCurrentFrame);
-    cv::Mat F21 =computeFundamentalMat(mLastFrame,mCurrentFrame);
-
+    cv::Mat F32 =computeFundamentalMat2(mSeLastFrame,mLastFrame);
+    cv::Mat F31 =computeFundamentalMat2(mSeLastFrame,mCurrentFrame);
+    cv::Mat F21 =computeFundamentalMat2(mLastFrame,mCurrentFrame);
     
-
-
 
     vector<double> data;
     

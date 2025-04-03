@@ -150,7 +150,8 @@ protected:
 
     bool NeedNewKeyFrame();
     void CreateNewKeyFrame();
-    cv::Mat computeFundamentalMat(Frame F2, Frame F1 );
+    cv::Mat computeFundamentalMat2(Frame F2, Frame F1 );
+    void computeFundamentalMat(Frame &F2, Frame &F1, cv::Mat &F );
     cv::Mat compute_epipole(cv::Mat F);
 
     // In case of performing only localization, this flag is true when there are no matches to
